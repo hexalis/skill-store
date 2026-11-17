@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / local artifacts
+.tmp/
+coverage/
+*.tgz
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/

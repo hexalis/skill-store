@@ -1,0 +1,28 @@
+{
+  "name": "apocryphon-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Apocryphon — skill store and manager for coding agents (CLI + core engine)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @apocryphon/core && npm run build -w @apocryphon/cli",
+    "typecheck": "npm run build -w @apocryphon/core --silent && npm run typecheck -w @apocryphon/core && npm run typecheck -w @apocryphon/cli",
+    "test": "npm run build -w @apocryphon/core --silent && node --import tsx --test packages/core/test/*.test.ts packages/cli/test/*.test.ts",
+    "clean": "rm -rf packages/core/dist packages/cli/dist",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@types/node": "^26.6.6",
+    "tsup": "^9.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
+}

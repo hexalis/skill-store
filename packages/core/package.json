@@ -1,0 +1,38 @@
+{
+  "name": "@apocryphon/core",
+  "version": "0.1.0",
+  "description": "Core engine for Apocryphon: skill vault, linter, sync engine and registry client.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "apocryphon",
+    "agent-skills",
+    "claude-code",
+    "cursor",
+    "opencode",
+    "skill-manager"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "zod": "^4.6.7"
+  }
+}

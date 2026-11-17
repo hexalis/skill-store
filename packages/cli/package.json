@@ -1,0 +1,47 @@
+{
+  "name": "@apocryphon/cli",
+  "version": "0.1.0",
+  "description": "Apocryphon CLI — install, validate and activate agent skills globally and per project.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "apocryphon": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "apocryphon",
+    "agent-skills",
+    "claude-code",
+    "cursor",
+    "opencode",
+    "cli"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@apocryphon/core": "^0.1.0",
+    "@clack/prompts": "^1.9.0",
+    "commander": "^14.0.3",
+    "picocolors": "^1.1.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    }
+  }
+}
