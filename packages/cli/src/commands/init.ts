@@ -81,7 +81,7 @@ export function initCommand(): Command {
             'Clients',
             CLIENT_IDS.map(
               (id) =>
-                `${CLIENT_LABELS[id]} ${enabled.includes(id) ? pc.green('on') : pc.dim('off')}`,
+                `${CLIENT_LABELS[id]} ${result.config.clients[id].enabled ? pc.green('on') : pc.dim('off')}`,
             ).join(' · '),
           )
 
