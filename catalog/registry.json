@@ -1,0 +1,48 @@
+{
+  "name": "apocryphon-catalog",
+  "version": 1,
+  "packs": {
+    "core-discipline": {
+      "description": "Operational discipline for native IDEs/CLIs: plan in read-only mode, commit atomically and triage reviews before editing.",
+      "skills": [
+        "workflow-read-only-plan",
+        "workflow-atomic-commits",
+        "workflow-review-triage"
+      ]
+    }
+  },
+  "skills": [
+    {
+      "id": "workflow-read-only-plan",
+      "version": "1.0.0",
+      "category": "workflow",
+      "path": "skills/workflow-read-only-plan",
+      "tags": ["planning", "discipline", "read-only"],
+      "description": "Read-only planning protocol: investigate first, propose atomic phases with affected files and a verification command, and wait for approval before editing."
+    },
+    {
+      "id": "workflow-atomic-commits",
+      "version": "1.0.0",
+      "category": "workflow",
+      "path": "skills/workflow-atomic-commits",
+      "tags": ["git", "commits", "discipline"],
+      "description": "Split implementation work into atomic, compilable semantic commits and verify each step before committing."
+    },
+    {
+      "id": "workflow-review-triage",
+      "version": "1.0.0",
+      "category": "workflow",
+      "path": "skills/workflow-review-triage",
+      "tags": ["review", "triage", "discipline"],
+      "description": "Triage PR review comments against the real code before applying them: classify as valid, optional or false positive and wait for selection."
+    },
+    {
+      "id": "api-error-handling",
+      "version": "1.0.0",
+      "category": "domain",
+      "path": "skills/api-error-handling",
+      "tags": ["http", "api", "errors"],
+      "description": "Consistent HTTP API error envelopes: stable codes, safe messages, status mapping and no sensitive data in logs."
+    }
+  ]
+}
