@@ -1,4 +1,5 @@
 export * from './schemas.js'
+export * from './registry-config.js'
 export * from './paths.js'
 export * from './store.js'
 export * from './context-budget.js'

@@ -52,8 +52,10 @@ export const ClientsConfigSchema = z.object({
 export type ClientsConfig = z.infer<typeof ClientsConfigSchema>
 
 export const RegistryConfigSchema = z.object({
-  /** Git URL (ssh/https) or absolute/local path to the registry repository. */
+  /** Git URL (ssh/https/file) or absolute/local path to the registry repository. */
   source: z.string().min(1),
+  /** Optional branch, tag or ref to pin the catalog. */
+  ref: z.string().min(1).optional(),
 })
 export type RegistryConfig = z.infer<typeof RegistryConfigSchema>
 

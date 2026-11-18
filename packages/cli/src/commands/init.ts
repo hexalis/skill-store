@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { Command } from 'commander'
 import * as p from '@clack/prompts'
 import { c as pc } from '../lib/colors.js'
@@ -5,7 +6,9 @@ import {
   CLIENT_IDS,
   CLIENT_LABELS,
   detectClientPresence,
+  expandHome,
   initializeHome,
+  isGitSource,
   parseClientList,
   resolvePaths,
   type ClientId,
@@ -36,7 +39,9 @@ export function initCommand(): Command {
     .description(
       'Create ~/.apocryphon, configure clients and optionally connect a skill registry',
     )
-    .option('-r, --registry <source>', 'Git URL or local path of the skill registry')
+    .option('-r, --registry <source>', 'Git URL or local path of the skill registry (defaults to the official catalog)')
+    .option('--ref <ref>', 'Branch, tag or commit to pin (Git sources only)')
+    .option('--skip-registry', 'Do not fetch the registry during init')
     .option(
       '-c, --clients <list>',
       'Clients to enable: claude,cursor,opencode,all (default: detected)',
@@ -46,6 +51,8 @@ export function initCommand(): Command {
     .action(
       async (options: {
         registry?: string
+        ref?: string
+        skipRegistry?: boolean
         clients?: string
         force?: boolean
         yes?: boolean
@@ -53,6 +60,9 @@ export function initCommand(): Command {
         await runSafely(async () => {
           const ui = uiFromArgv()
           const paths = resolvePaths()
+          if (options.ref && !options.registry) {
+            throw new Error('--ref requires --registry <source>.')
+          }
           const detected = await detectClientPresence()
 
           let enabled: ClientId[]
@@ -69,9 +79,16 @@ export function initCommand(): Command {
             enabled = CLIENT_IDS.filter((id) => detected[id])
           }
 
+          const registrySource = options.registry
+            ? isGitSource(options.registry.trim())
+              ? options.registry.trim()
+              : path.resolve(expandHome(options.registry.trim()))
+            : null
           const result = await initializeHome({
             paths,
-            registrySource: options.registry ?? null,
+            registrySource,
+            registryRef: options.ref,
+            loadRegistry: !options.skipRegistry,
             enabledClients: enabled,
             force: options.force ?? false,
             reporter: ui.reporter(),
@@ -96,7 +113,12 @@ export function initCommand(): Command {
 
           if (result.registry) {
             const { index, location } = result.registry
+            const isDefault = result.config.registry === null
             kv('Registry', `${index.name} ${pc.dim(`(${location.kind})`)}`)
+            kv(
+              'Source',
+              `${location.source}${location.ref ? ` @ ${location.ref}` : ''}${isDefault ? pc.green(' (default)') : ''}`,
+            )
             kv(
               'Catalog',
               `${index.skills.length} skill(s) · ${Object.keys(index.packs).length} pack(s)`,
@@ -105,8 +127,12 @@ export function initCommand(): Command {
               bullet(`Packs: ${Object.keys(index.packs).join(', ')}`)
             }
           } else {
-            kv('Registry', pc.dim('not configured'))
-            bullet('Add one later with `apocryphon init --registry <source>`.')
+            kv('Registry', pc.dim('not fetched'))
+            bullet(
+              result.config.registry
+                ? `Configured source: ${result.config.registry.source}`
+                : 'The built-in default will be used on the next command.',
+            )
           }
 
           heading('Next steps')

@@ -55,8 +55,13 @@ Requires **Node.js >= 20**.
 ## Quick start
 
 ```bash
-# 1. Create ~/.apocryphon and connect the catalog
-apocryphon init --registry git@github.com:marlonbaltodano11/apocryphon-registry.git
+# 1. Create ~/.apocryphon (connects the official catalog by default)
+apocryphon init
+
+# Optional: switch to a fork, a local catalog or a private Git repo
+apocryphon registry use git@ssh.dev.azure.com:v3/org/project/repo
+apocryphon registry show
+apocryphon registry default        # back to the official catalog
 
 # 2. Explore
 apocryphon categories
@@ -126,6 +131,38 @@ Conflicts keep standard markers (`<<<<<<<`, `=======`, `>>>>>>>`) and the comman
 exits `1`. Resolve them in your editor and run `apocryphon sync` again. Full
 policy: [`docs/skill-updates.md`](docs/skill-updates.md).
 
+## Registry source
+
+The **official catalog is the default**: `apocryphon init` connects to
+`https://github.com/marlonbaltodano11/apocryphon-registry.git` automatically.
+
+You can switch to a local path, a fork, a private GitHub repo or an Azure DevOps
+repository. A single source is active at a time:
+
+```bash
+apocryphon registry show                 # source, ref, cache and catalog summary
+apocryphon registry use ~/dev/skills     # local directory
+apocryphon registry use git@github.com:me/skills.git
+apocryphon registry use git@ssh.dev.azure.com:v3/org/project/repo
+apocryphon registry use <url> --ref v1.0.0   # pin a branch, tag or commit
+apocryphon registry default              # remove the override
+```
+
+`config.json` keeps `registry: null` for the default, or
+`{ "source": "...", "ref": "..." }` for an override. Local paths are stored as
+absolute paths. Git sources are cloned once into
+`~/.apocryphon/registries/<hash>/`, so switching sources never mixes caches.
+
+Changing the source **does not delete installed skills, local edits, backups or
+project activations**. The new catalog is used for future installs and updates;
+packs that are still active keep their definitions. A registry only needs a
+`registry.json` and its `skills/<id>/SKILL.md` folders; see the
+[registry repository](https://github.com/marlonbaltodano11/apocryphon-registry).
+
+`APOCRYPHON_DEFAULT_REGISTRY` can replace the built-in default (useful for
+enterprises and tests). For an offline bootstrap, use
+`apocryphon init --skip-registry`; the next command will fetch the active source.
+
 ## Discovery
 
 ```bash
@@ -158,7 +195,8 @@ source and asks for `--trust-scripts` when it contains scripts.
 
 | Command | Description |
 | ------- | ----------- |
-| `apocryphon init` | Create the home, configure clients, connect a registry. |
+| `apocryphon init` | Create the home, configure clients, connect the default registry. |
+| `apocryphon registry show/use/default` | Inspect, override or reset the active skill source. |
 | `apocryphon clients list/enable/disable` | Manage which clients receive symlinks. |
 | `apocryphon search <query>` | Fuzzy search the catalog (or installed skills). |
 | `apocryphon find [query]` | Fuzzy picker with preview and actions. |
@@ -200,7 +238,7 @@ source and asks for `--trust-scripts` when it contains scripts.
 ├── vault/<id>/        # working copies (symlinked)
 ├── pristine/<id>/     # merge baseline
 ├── backups/<id>/<ts>/ # snapshots before overwrite/merge
-└── registry/          # local clone of the Git registry
+└── registries/<hash>/ # per-source/per-ref Git clones
 ```
 
 `APOCRYPHON_HOME` overrides the state directory (useful for tests).

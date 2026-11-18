@@ -4,6 +4,7 @@ import {
   type ClientId,
   type Config,
   type ClientsConfig,
+  type Projects,
   type RegistryIndex,
   type State,
 } from './schemas.js'
@@ -12,6 +13,7 @@ import {
   emptyProjects,
   emptyState,
   ensureDir,
+  nowIso,
   pathExists,
   readConfig,
   readProjects,
@@ -20,21 +22,24 @@ import {
   writeProjects,
   writeState,
 } from './store.js'
-import {
-  ensureRegistry,
-  readRegistryIndex,
-  resolveRegistryLocation,
-  type RegistryLocation,
-} from './registry.js'
+import { prepareRegistrySource, type RegistryLocation } from './registry.js'
+import { effectiveRegistryConfig } from './registry-config.js'
+import { collectActivePacks, registryPackSet } from './packs.js'
 import type { ProgressReporter } from './progress.js'
 
 export interface InitializeOptions {
   paths: ApocryphonPaths
   registrySource?: string | null
+  registryRef?: string
   enabledClients?: ClientId[]
   force?: boolean
   homeDir?: string
   reporter?: ProgressReporter
+  /**
+   * Fetch and validate the active registry during init. Defaults to true when
+   * an explicit source is provided; the CLI passes true to fetch the default.
+   */
+  loadRegistry?: boolean
 }
 
 export interface InitializeResult {
@@ -49,27 +54,44 @@ function buildClients(enabled: ClientId[]): ClientsConfig {
   return defaultClientsConfig(enabled)
 }
 
+/** Merge new pack definitions, keeping old ones that are no longer defined. */
 export function mergeRegistryPacks(state: State, index: RegistryIndex): State {
   const merged = { ...state.packs }
   for (const [name, pack] of Object.entries(index.packs)) {
     merged[name] = pack
   }
-  return { ...state, packs: merged, updatedAt: new Date().toISOString() }
+  return { ...state, packs: merged, updatedAt: nowIso() }
 }
 
 /**
  * Create (or repair) the Apocryphon home directory.
  *
- * Existing configuration is preserved unless `force` is set. When a registry is
- * provided, its pack definitions are imported into state.json so packs keep
- * working offline.
+ * Existing configuration is preserved unless `force` is set. The active
+ * registry is the explicit source, the configured override, or the built-in
+ * default. Pack definitions are replaced by the new catalog while preserving
+ * packs that are still active.
  */
 export async function initializeHome(options: InitializeOptions): Promise<InitializeResult> {
-  const { paths, registrySource = null, enabledClients = [], force = false } = options
+  const {
+    paths,
+    registrySource = null,
+    registryRef,
+    enabledClients = [],
+    force = false,
+    reporter,
+  } = options
   const createdDirs: string[] = []
   const createdFiles: string[] = []
+  const trimmedRef = registryRef?.trim() || undefined
+  const explicitRegistry =
+    registrySource && registrySource.trim() !== ''
+      ? {
+          source: registrySource.trim(),
+          ...(trimmedRef ? { ref: trimmedRef } : {}),
+        }
+      : null
 
-  for (const dir of [paths.home, paths.vault, paths.pristine, paths.backups]) {
+  for (const dir of [paths.home, paths.vault, paths.pristine, paths.backups, paths.registries]) {
     if (!(await pathExists(dir))) createdDirs.push(dir)
     await ensureDir(dir)
   }
@@ -79,7 +101,7 @@ export async function initializeHome(options: InitializeOptions): Promise<Initia
     config = {
       version: 1,
       dedupe: true,
-      registry: registrySource ? { source: registrySource } : null,
+      registry: explicitRegistry,
       clients: buildClients(enabledClients),
       budget: { warnAt: 8, failAt: 15 },
     }
@@ -87,9 +109,14 @@ export async function initializeHome(options: InitializeOptions): Promise<Initia
     createdFiles.push(paths.config)
   } else {
     config = await readConfig(paths.config)
-    if (registrySource && config.registry?.source !== registrySource) {
-      config = { ...config, registry: { source: registrySource } }
-      await writeConfig(paths.config, config)
+    if (explicitRegistry) {
+      const same =
+        config.registry?.source === explicitRegistry.source &&
+        config.registry?.ref === explicitRegistry.ref
+      if (!same) {
+        config = { ...config, registry: explicitRegistry }
+        await writeConfig(paths.config, config)
+      }
     }
   }
 
@@ -102,23 +129,34 @@ export async function initializeHome(options: InitializeOptions): Promise<Initia
     createdFiles.push(paths.state)
   }
 
+  let projects: Projects
   if (!(await pathExists(paths.projects))) {
-    await writeProjects(paths.projects, emptyProjects())
+    projects = emptyProjects()
+    await writeProjects(paths.projects, projects)
     createdFiles.push(paths.projects)
   } else {
-    await readProjects(paths.projects)
+    projects = await readProjects(paths.projects)
   }
 
   let registry: InitializeResult['registry'] = null
-  if (config.registry?.source) {
-    const location = resolveRegistryLocation(
-      config.registry.source,
+  const shouldLoad =
+    options.loadRegistry ??
+    Boolean(explicitRegistry || config.registry?.source)
+
+  if (shouldLoad) {
+    const effective = explicitRegistry ?? effectiveRegistryConfig(config)
+    const { location, index } = await prepareRegistrySource({
       paths,
-      options.homeDir ?? os.homedir(),
-    )
-    await ensureRegistry(location, { reporter: options.reporter })
-    const index = await readRegistryIndex(location)
-    state = mergeRegistryPacks(state, index)
+      source: effective.source,
+      ref: effective.ref,
+      homeDir: options.homeDir ?? os.homedir(),
+      reporter,
+    })
+    state = {
+      ...state,
+      packs: registryPackSet(state.packs, index.packs, collectActivePacks(state, projects)),
+      updatedAt: nowIso(),
+    }
     await writeState(paths.state, state)
     registry = { index, location }
   }

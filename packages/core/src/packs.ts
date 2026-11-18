@@ -1,4 +1,4 @@
-import type { Pack, ProjectEntry, State } from './schemas.js'
+import type { Pack, ProjectEntry, Projects, State } from './schemas.js'
 
 export interface ActiveSkills {
   global: string[]
@@ -67,4 +67,34 @@ export function packNames(state: State, registryPacks: Record<string, Pack> | nu
   const names = new Set<string>(Object.keys(state.packs))
   if (registryPacks) for (const name of Object.keys(registryPacks)) names.add(name)
   return [...names].sort((a, b) => a.localeCompare(b))
+}
+
+
+/** Active pack names across the global scope and every registered project. */
+export function collectActivePacks(state: State, projects?: Projects): string[] {
+  const active = new Set<string>(state.globalPacks)
+  if (projects) {
+    for (const entry of Object.values(projects.projects)) {
+      for (const name of entry.packs) active.add(name)
+    }
+  }
+  return [...active]
+}
+
+/**
+ * Build the pack catalog of the new source while preserving definitions of
+ * packs that are still active. This prevents changing the source from silently
+ * deactivating skills that were active through a pack missing from the new
+ * catalog.
+ */
+export function registryPackSet(
+  current: Record<string, Pack>,
+  incoming: Record<string, Pack>,
+  activePacks: Iterable<string> = [],
+): Record<string, Pack> {
+  const next: Record<string, Pack> = { ...incoming }
+  for (const name of activePacks) {
+    if (!(name in next) && current[name]) next[name] = current[name]
+  }
+  return next
 }

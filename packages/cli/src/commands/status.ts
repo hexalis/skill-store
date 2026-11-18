@@ -40,7 +40,12 @@ export function statusCommand(): Command {
       }
 
       ui.info(`\n${pc.bold('Apocryphon')} ${pc.dim(status.home)}`)
-      ui.info(`${pc.dim('Registry'.padEnd(14))}${status.registrySource ?? pc.dim('not configured')}`)
+      ui.info(
+        `${pc.dim('Registry'.padEnd(14))}${status.registrySource}${status.registryIsDefault ? pc.green(' (default)') : ''}`,
+      )
+      if (status.registryRef) {
+        ui.info(`${pc.dim('Registry ref'.padEnd(14))}${status.registryRef}`)
+      }
       ui.info(`${pc.dim('Project'.padEnd(14))}${status.projectRoot ?? pc.dim('none')}`)
       if (status.projectRoot) {
         ui.info(

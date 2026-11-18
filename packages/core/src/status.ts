@@ -24,6 +24,7 @@ import { pathExists } from './store.js'
 import { diffManifests } from './skill-diff.js'
 import { planSkillUpdate } from './skill-updates.js'
 import { registrySkillDir } from './registry.js'
+import { effectiveRegistryConfig } from './registry-config.js'
 
 export interface ClientStatus {
   id: ClientId
@@ -53,7 +54,9 @@ export interface SkillStatusRow {
 
 export interface StatusReport {
   home: string
-  registrySource: string | null
+  registrySource: string
+  registryRef: string | null
+  registryIsDefault: boolean
   projectRoot: string | null
   projectEntry: ProjectEntry | null
   clients: ClientStatus[]
@@ -331,9 +334,12 @@ export async function collectStatus(options: CollectStatusOptions): Promise<Stat
     categoryCounts[key] = (categoryCounts[key] ?? 0) + 1
   }
 
+  const effectiveRegistry = effectiveRegistryConfig(config)
   return {
     home: paths.home,
-    registrySource: config.registry?.source ?? null,
+    registrySource: effectiveRegistry.source,
+    registryRef: effectiveRegistry.ref ?? null,
+    registryIsDefault: config.registry === null,
     projectRoot: resolvedProject,
     projectEntry: entry,
     clients,

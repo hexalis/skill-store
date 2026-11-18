@@ -23,7 +23,8 @@ Requires Node.js >= 20.
 
 | Command | Description |
 | ------- | ----------- |
-| `apocryphon init` | Create `~/.apocryphon`, configure clients, connect a registry. |
+| `apocryphon init` | Create `~/.apocryphon`, configure clients, connect the default registry. |
+| `apocryphon registry show/use/default` | Inspect or switch the active skill source (local, Git, Azure). |
 | `apocryphon clients list/enable/disable` | Choose which clients receive symlinks. |
 | `apocryphon use` | Interactive skill/pack picker (project or `--global`). |
 | `apocryphon find [query]` | Fuzzy picker with preview and actions. |
@@ -73,6 +74,26 @@ apocryphon sync --force      # registry wins (backup first)
 
 Without a TTY and without flags, `sync` aborts when a customized skill has an
 update. See `docs/skill-updates.md` in the repository for details.
+
+## Registry source
+
+The official catalog is the default. Use `registry` to inspect or switch sources:
+
+```bash
+apocryphon registry show
+apocryphon registry use ~/dev/skills
+apocryphon registry use git@ssh.dev.azure.com:v3/org/project/repo
+apocryphon registry use <url> --ref v1.0.0
+apocryphon registry default
+```
+
+`config.json` stores `registry: null` for the default or an explicit
+`{ source, ref }` override. Local paths are stored absolute. Git clones live in
+`~/.apocryphon/registries/<hash>/`, one per source/ref. Switching sources never
+deletes installed skills, local edits, backups or project activations.
+
+`APOCRYPHON_DEFAULT_REGISTRY` overrides the built-in default source. Use
+`apocryphon init --skip-registry` to bootstrap without fetching the catalog.
 
 ## Shell completions
 

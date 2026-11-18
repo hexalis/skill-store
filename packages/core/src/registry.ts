@@ -10,6 +10,7 @@ import {
 } from './schemas.js'
 import type { ApocryphonPaths } from './paths.js'
 import { expandHome } from './paths.js'
+import { registryCacheDir } from './registry-config.js'
 import { ensureDir, formatZodError, nowIso, pathExists, readRawJson } from './store.js'
 import { lintSkillDir, type SkillLintResult } from './skill-linter.js'
 import { buildManifest, copyDirAtomic, JUNK_NAMES, manifestContentHash } from './skill-files.js'
@@ -22,11 +23,12 @@ export interface RegistryLocation {
   kind: 'git' | 'local'
   dir: string
   source: string
+  ref?: string
 }
 
 export function isGitSource(source: string): boolean {
   if (/^git@/.test(source)) return true
-  if (/^(ssh|git|https?):\/\//.test(source)) return true
+  if (/^(ssh|git|https?|file):\/\//.test(source)) return true
   return source.endsWith('.git')
 }
 
@@ -34,14 +36,21 @@ export function resolveRegistryLocation(
   source: string,
   paths: ApocryphonPaths,
   homeDir: string = os.homedir(),
+  ref?: string,
 ): RegistryLocation {
   if (isGitSource(source)) {
-    return { kind: 'git', dir: paths.registry, source }
+    return {
+      kind: 'git',
+      dir: registryCacheDir(paths, source, ref),
+      source,
+      ...(ref ? { ref } : {}),
+    }
   }
   return {
     kind: 'local',
     dir: path.resolve(expandHome(source, homeDir)),
     source,
+    ...(ref ? { ref } : {}),
   }
 }
 
@@ -62,8 +71,8 @@ export interface EnsureRegistryOptions {
 /**
  * Make the registry available locally.
  *
- * - Git sources are cloned (shallow) into `~/.apocryphon/registry` and updated
- *   with `git pull --ff-only`.
+ * - Git sources are cloned (shallow) into a per-source cache under
+ *   `~/.apocryphon/registries/<hash>/` and updated there.
  * - Local paths are used in place, which keeps development and tests simple.
  */
 export async function ensureRegistry(
@@ -85,10 +94,38 @@ export async function ensureRegistry(
     const step = 'registry-clone'
     reporter.emit({ type: 'start', step, message: `Cloning ${location.source}` })
     await ensureDir(path.dirname(location.dir))
-    const clone = runGit(
-      ['clone', '--depth', '1', location.source, location.dir],
-      path.dirname(location.dir),
-    )
+
+    const baseArgs = ['clone', '--depth', '1']
+    const cloneArgs = location.ref
+      ? [...baseArgs, '--branch', location.ref, location.source, location.dir]
+      : [...baseArgs, location.source, location.dir]
+    let clone = runGit(cloneArgs, path.dirname(location.dir))
+
+    if (!clone.ok && location.ref) {
+      // `--branch` does not accept arbitrary commit SHAs. Fall back to a shallow
+      // fetch of the requested ref.
+      await fs.rm(location.dir, { recursive: true, force: true })
+      const baseClone = runGit(
+        [...baseArgs, location.source, location.dir],
+        path.dirname(location.dir),
+      )
+      if (!baseClone.ok) {
+        reporter.emit({ type: 'fail', step, message: baseClone.stderr })
+        throw new Error(`Could not clone registry "${location.source}":\n${baseClone.stderr}`)
+      }
+      const fetch = runGit(['fetch', '--depth', '1', 'origin', location.ref], location.dir)
+      const checkout = fetch.ok
+        ? runGit(['checkout', '--detach', 'FETCH_HEAD'], location.dir)
+        : fetch
+      if (!fetch.ok || !checkout.ok) {
+        reporter.emit({ type: 'fail', step, message: checkout.stderr })
+        throw new Error(
+          `Could not check out ref "${location.ref}" from "${location.source}":\n${checkout.stderr}`,
+        )
+      }
+      clone = { ok: true, stdout: '', stderr: '' }
+    }
+
     if (!clone.ok) {
       reporter.emit({ type: 'fail', step, message: clone.stderr })
       throw new Error(`Could not clone registry "${location.source}":\n${clone.stderr}`)
@@ -100,10 +137,17 @@ export async function ensureRegistry(
   if (options.pull) {
     const step = 'registry-pull'
     reporter.emit({ type: 'start', step, message: `Updating ${location.source}` })
-    const pull = runGit(['pull', '--ff-only'], location.dir)
-    if (!pull.ok) {
-      reporter.emit({ type: 'fail', step, message: pull.stderr })
-      throw new Error(`Could not update registry "${location.source}":\n${pull.stderr}`)
+    const update = location.ref
+      ? runGit(['fetch', '--depth', '1', 'origin', location.ref], location.dir)
+      : runGit(['pull', '--ff-only'], location.dir)
+    const reset =
+      location.ref && update.ok
+        ? runGit(['reset', '--hard', 'FETCH_HEAD'], location.dir)
+        : { ok: true, stdout: '', stderr: '' }
+    if (!update.ok || !reset.ok) {
+      const error = !update.ok ? update.stderr : reset.stderr
+      reporter.emit({ type: 'fail', step, message: error })
+      throw new Error(`Could not update registry "${location.source}":\n${error}`)
     }
     reporter.emit({ type: 'succeed', step, message: 'Registry updated' })
     return { pulled: true, cloned: false }
@@ -137,6 +181,52 @@ export function registrySkillDir(location: RegistryLocation, entry: RegistrySkil
     throw new Error(`Skill "${entry.id}" points outside the registry: ${entry.path}`)
   }
   return dir
+}
+
+/** Verify that every indexed skill actually has a SKILL.md on disk. */
+export async function assertRegistryLayout(
+  location: RegistryLocation,
+  index: RegistryIndex,
+): Promise<void> {
+  for (const entry of index.skills) {
+    const skillDir = registrySkillDir(location, entry)
+    if (!(await pathExists(path.join(skillDir, 'SKILL.md')))) {
+      throw new Error(
+        `Registry "${location.source}" lists "${entry.id}" at ${entry.path}, but ${path.join(skillDir, 'SKILL.md')} does not exist.`,
+      )
+    }
+  }
+}
+
+export interface PrepareRegistryOptions {
+  paths: ApocryphonPaths
+  source: string
+  ref?: string
+  homeDir?: string
+  pull?: boolean
+  reporter?: ProgressReporter
+}
+
+/**
+ * Resolve, fetch and validate a registry source without writing config or
+ * state. Callers can commit the switch only after this succeeds.
+ */
+export async function prepareRegistrySource(
+  options: PrepareRegistryOptions,
+): Promise<{ location: RegistryLocation; index: RegistryIndex }> {
+  const location = resolveRegistryLocation(
+    options.source,
+    options.paths,
+    options.homeDir,
+    options.ref,
+  )
+  await ensureRegistry(location, {
+    pull: options.pull ?? false,
+    reporter: options.reporter,
+  })
+  const index = await readRegistryIndex(location)
+  await assertRegistryLayout(location, index)
+  return { location, index }
 }
 
 export interface InstallOptions {

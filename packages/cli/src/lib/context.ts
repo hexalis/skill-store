@@ -1,6 +1,8 @@
+import os from 'node:os'
 import path from 'node:path'
 import {
   ensureRegistry,
+  effectiveRegistryConfig,
   findRegisteredProject,
   mergeRegistryPacks,
   normalizeProjectPath,
@@ -102,11 +104,14 @@ export interface RegistryHandle {
 export async function loadRegistry(
   ctx: CliContext,
   options: { pull?: boolean; reporter?: ProgressReporter } = {},
-): Promise<RegistryHandle | null> {
-  const source = ctx.config.registry?.source
-  if (!source) return null
-
-  const location = resolveRegistryLocation(source, ctx.paths)
+): Promise<RegistryHandle> {
+  const effective = effectiveRegistryConfig(ctx.config)
+  const location = resolveRegistryLocation(
+    effective.source,
+    ctx.paths,
+    os.homedir(),
+    effective.ref,
+  )
   await ensureRegistry(location, { pull: options.pull ?? false, reporter: options.reporter })
   const index = await readRegistryIndex(location)
   ctx.state = mergeRegistryPacks(ctx.state, index)
@@ -125,13 +130,7 @@ export async function tryLoadRegistry(
 }
 
 export async function requireRegistry(ctx: CliContext): Promise<RegistryHandle> {
-  const handle = await loadRegistry(ctx)
-  if (!handle) {
-    throw new Error(
-      'No skill registry configured. Run `apocryphon init --registry <git-url-or-path>` first.',
-    )
-  }
-  return handle
+  return loadRegistry(ctx)
 }
 
 /** Merge pack definitions, registry taking precedence over the local cache. */

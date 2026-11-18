@@ -83,7 +83,7 @@ async function decideUpdates(
 
 function printDryRun(ui: Ui, plans: SkillUpdatePlan[], handle: RegistryHandle | null): void {
   if (!handle) {
-    ui.info('No registry configured (or --offline): only symlinks will be reconciled.')
+    ui.info('Registry updates skipped (--offline): only symlinks will be reconciled.')
     return
   }
   if (plans.length === 0) {
@@ -150,7 +150,7 @@ export async function runSync(options: SyncOptions, ui: Ui = uiFromArgv(Boolean(
   const dryRun = options.dryRun ?? false
 
   let handle: RegistryHandle | null = null
-  if (ctx.config.registry?.source && !options.offline) {
+  if (!options.offline) {
     handle = await loadRegistry(ctx, { pull: !dryRun, reporter })
   }
 

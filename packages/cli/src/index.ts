@@ -12,6 +12,7 @@ import { syncCommand } from './commands/sync.js'
 import { validateCommand } from './commands/validate.js'
 import { statusCommand } from './commands/status.js'
 import { mcpCommand } from './commands/mcp.js'
+import { registryCommand } from './commands/registry.js'
 import { diffCommand } from './commands/diff.js'
 import { resetCommand } from './commands/reset.js'
 import { adoptCommand } from './commands/adopt.js'
@@ -65,6 +66,7 @@ program.addCommand(resetCommand())
 program.addCommand(adoptCommand())
 program.addCommand(backupsCommand())
 program.addCommand(completionCommand())
+program.addCommand(registryCommand())
 program.addCommand(mcpCommand())
 program.addCommand(completeCommand())
 

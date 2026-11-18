@@ -40,11 +40,13 @@ export interface ApocryphonPaths {
   projects: string
   /** Installed skills (source of truth used for symlinks). */
   vault: string
- /** Pristine copies of installed skills (merge base). */
+  /** Pristine copies of installed skills (merge base). */
   pristine: string
   /** Backups taken before overwriting or merging customized skills. */
   backups: string
-  /** Local clone (or reference) of the remote registry. */
+  /** Base directory for per-source registry clones. */
+  registries: string
+  /** Legacy single-registry cache (kept for reference/migration). */
   registry: string
 }
 
@@ -57,6 +59,7 @@ export function resolvePaths(home: string = resolveApocryphonHome()): Apocryphon
     vault: path.join(home, 'vault'),
     pristine: path.join(home, 'pristine'),
     backups: path.join(home, 'backups'),
+    registries: path.join(home, 'registries'),
     registry: path.join(home, 'registry'),
   }
 }
