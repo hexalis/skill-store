@@ -37,5 +37,14 @@
   "dependencies": {
     "gray-matter": "^4.0.3",
     "zod": "^4.6.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marlonbaltodano11/apocryphon.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/marlonbaltodano11/apocryphon/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/marlonbaltodano11/apocryphon/issues"
   }
 }

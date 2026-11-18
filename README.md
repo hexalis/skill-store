@@ -1,44 +1,48 @@
+<div align="center">
+
 # Apocryphon
 
-**Apocryphon** is a local skill store and manager for coding agents. It installs,
-validates and activates [Agent Skills](https://opencode.ai/docs/skills) for
-**Claude Code**, **Cursor** and **OpenCode**, globally or per project, without
-modifying the shared `.gitignore` of your repositories.
+**A local skill store for coding agents.**
 
-It is designed for environments where you cannot run an external orchestration
-harness: Apocryphon guides the agents from inside the native IDE/CLI using
-high-quality skill descriptions, deterministic verification scripts and a
-careful, customization-safe update flow.
+Install, validate and activate Agent Skills for **Claude Code**, **Cursor** and
+**OpenCode** — globally or per project, without polluting your repositories.
 
-## Highlights
+[![CI](https://github.com/marlonbaltodano11/apocryphon/actions/workflows/ci.yml/badge.svg)](https://github.com/marlonbaltodano11/apocryphon/actions/workflows/ci.yml)
+[![npm @apocryphon/cli](https://img.shields.io/npm/v/@apocryphon/cli?label=%40apocryphon%2Fcli)](https://www.npmjs.com/package/@apocryphon/cli)
+[![npm @apocryphon/core](https://img.shields.io/npm/v/@apocryphon/core?label=%40apocryphon%2Fcore)](https://www.npmjs.com/package/@apocryphon/core)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 
-- **Global and per-project activation** with symlinks and `.git/info/exclude`
-  (no repository pollution).
-- **Fuzzy finder** in pickers and search, plus `find` and `browse` flows.
-- **Categories and curated tags** for discovery (`--category`, `--tag`, `tags`,
-  `categories`).
-- **Shell completions** for bash, zsh and fish, and an interactive launcher when
-  you run `apocryphon` with no arguments.
-- **Safe updates:** local edits are detected with per-file hashes; updates show a
-  plan/diff and support three-way merges, `--force` and `--keep`. Backups are
-  created automatically (5 per skill).
-- **Local skills:** create with `apocryphon new`, import with `apocryphon import`.
-- **Lint as a gate:** portable names, explicit triggers in the description,
-  categories/tags, body size, references and script fingerprints.
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Safe updates](#updating-skills-safely) · [Commands](#commands) · [Registry](https://github.com/marlonbaltodano11/apocryphon-registry) · [Docs](docs/cli-ux.md)
 
-## Packages
+</div>
 
-| Package | Purpose |
-| ------- | ------- |
-| [`@apocryphon/core`](./packages/core) | Skill vault, linter, sync engine, registry client, diff/merge and status reporting. |
-| [`@apocryphon/cli`](./packages/cli) | Lightweight terminal interface (`apocryphon`). **Current focus.** |
-| `@apocryphon/ui` | Visual store (planned, distributed separately). |
+---
 
-The official catalog lives in a separate repository:
-[Majokan/apocryphon-registry](https://github.com/Majokan/apocryphon-registry).
-`catalog/` in this repo is a minimal fixture used by the test suite.
+Apocryphon is built for the real world: sometimes you **cannot** run a custom
+orchestration harness because of organization policies, and you have to work
+inside the official IDEs and CLIs. Instead of fighting that, Apocryphon guides
+the agents from the inside with high-quality skill descriptions, deterministic
+verification scripts and a careful update flow that never discards your edits
+silently.
 
-## Install (CLI)
+## Why Apocryphon
+
+- **Global and per-project activation.** Symlinks into each client's native
+  skill directory, with `<project>/.git/info/exclude` handling so `git status`
+  stays clean.
+- **Fuzzy discovery.** Search-as-you-type in every picker, plus `find`, `browse`,
+  categories and curated tags.
+- **Safe updates.** Per-file hashes, pristine baselines, diffs, three-way merges,
+  `--force`/`--keep` and automatic backups (5 per skill).
+- **Local skills.** Scaffold with `apocryphon new`, import with `apocryphon import`.
+- **Lint as a gate.** Portable names, explicit triggers, categories/tags, body
+  size, references and script fingerprints.
+- **Scriptable.** `--json` on every read command, shell completions for bash,
+  zsh and fish.
+- **No backend.** Git is the database; no server, no account, works offline.
+
+## Install
 
 ```bash
 npm install -g @apocryphon/cli
@@ -46,13 +50,13 @@ npm install -g @apocryphon/cli
 npx @apocryphon/cli --help
 ```
 
-Requires Node.js >= 20.
+Requires **Node.js >= 20**.
 
 ## Quick start
 
 ```bash
-# 1. Create ~/.apocryphon and connect the skill catalog
-apocryphon init --registry git@github.com:Majokan/apocryphon-registry.git
+# 1. Create ~/.apocryphon and connect the catalog
+apocryphon init --registry git@github.com:marlonbaltodano11/apocryphon-registry.git
 
 # 2. Explore
 apocryphon categories
@@ -66,30 +70,40 @@ cd ~/work/my-project && apocryphon use      # interactive picker
 
 # 4. Keep things healthy
 apocryphon status                # clients, budget, customizations, updates
-apocryphon sync --dry-run        # preview registry updates and link changes
+apocryphon sync --dry-run        # preview updates and link changes
 apocryphon sync                  # merge/apply with explicit decisions
 ```
 
 ## How it works
 
-- The **vault** (`~/.apocryphon/vault/<skill-id>/`) is the working copy.
-- The **pristine** copy (`~/.apocryphon/pristine/<id>/`) is the merge base; it is
-  what the registry installed, untouched by your edits.
-- **Global skills** are symlinked into each enabled client's global directory
-  (`~/.claude/skills`, `~/.cursor/skills`, `~/.config/opencode/skills`).
-- **Project skills** are symlinked into `<project>/.claude/skills`,
-  `<project>/.cursor/skills` and `<project>/.opencode/skills`, and those paths are
-  written to `<project>/.git/info/exclude` — so the client discovers them while
-  `git status` stays clean.
+```text
+        registry (Git)                 ~/.apocryphon
+   ┌────────────────────┐        ┌──────────────────────┐
+   │ registry.json      │        │ vault/<id>/          │──┐
+   │ skills/<id>/       │──install──▶ pristine/<id>/     │  │ symlinks
+   │ packs, taxonomy    │        │ backups/<id>/<ts>/   │  │
+   └────────────────────┘        │ state.json           │  │
+                                 │ projects.json        │  │
+                                 └──────────────────────┘  │
+                                                           ▼
+                                   ~/.claude/skills      ~/.cursor/skills
+                                   ~/.config/opencode/skills
+                                   <project>/.claude/skills (+ .git/info/exclude)
+```
+
+- The **vault** is the working copy the agents read.
+- The **pristine** copy is the merge base: the registry version, untouched by you.
+- **Global skills** go to each enabled client's global directory.
+- **Project skills** go to `<project>/<client>/skills` and are added to
+  `<project>/.git/info/exclude`; the shared `.gitignore` is never modified.
 - When Claude Code and OpenCode are both enabled, Apocryphon skips the duplicate
   OpenCode copy (OpenCode already scans `~/.claude/skills`).
-- Only symlinks managed by Apocryphon are ever removed. Real files and
-  directories are never deleted.
+- Only symlinks managed by Apocryphon are removed. Real files are never deleted.
 
-## Customizing skills
+## Updating skills safely
 
 Edit anything inside `~/.apocryphon/vault/<id>/`. Apocryphon records file hashes
-and modes so it can tell your changes apart from registry changes:
+and modes, so it can tell your changes apart from registry changes:
 
 ```bash
 apocryphon diff workflow-atomic-commits   # local vs pristine and registry changes
@@ -101,10 +115,34 @@ apocryphon reset <id>                     # discard local changes
 apocryphon backups list <id>              # snapshots taken before overwrites
 ```
 
-Without a TTY and without flags, `sync` **refuses to overwrite** customized
-skills. See [`docs/skill-updates.md`](./docs/skill-updates.md) for the full policy.
+| Situation | Default behavior |
+| --- | --- |
+| No local changes | Fast-forward to the registry version |
+| Local changes, registry unchanged | Nothing to do |
+| Local changes + registry changes | Ask the user (merge / registry / keep / per file) |
+| No TTY and no flags | **Abort** and list the flags to choose |
 
-## Create and import local skills
+Conflicts keep standard markers (`<<<<<<<`, `=======`, `>>>>>>>`) and the command
+exits `1`. Resolve them in your editor and run `apocryphon sync` again. Full
+policy: [`docs/skill-updates.md`](docs/skill-updates.md).
+
+## Discovery
+
+```bash
+apocryphon search prisma            # fuzzy ranking, stable scores
+apocryphon search git --category workflow --tag commits
+apocryphon find                     # type → preview → enable/disable/install
+apocryphon browse                   # category → skill → action
+apocryphon tags                     # tag counts
+apocryphon categories               # category counts
+apocryphon completion --install     # bash, zsh or fish
+```
+
+Running `apocryphon` with no arguments opens an interactive launcher. In the
+fuzzy pickers: **type** to filter, **↑/↓** to move, **Tab** to toggle,
+**Enter** to confirm, **Esc** to cancel. See [`docs/cli-ux.md`](docs/cli-ux.md).
+
+## Local skills
 
 ```bash
 apocryphon new my-skill --category workflow --tags git,project
@@ -127,7 +165,7 @@ source and asks for `--trust-scripts` when it contains scripts.
 | `apocryphon browse` | Explore installed skills by category. |
 | `apocryphon tags` / `categories` | Tag and category counts. |
 | `apocryphon install [skills...]` | Install/update skills (`--all`, `--filter`). |
-| `apocryphon list` | Installed skills with scope, category and customization state. |
+| `apocryphon list` | Installed skills, scopes and customization state. |
 | `apocryphon enable/disable <items...>` | Toggle skills or packs (`--global`). |
 | `apocryphon pack list/apply/remove` | Manage packs. |
 | `apocryphon use` | Interactive selector for the current project. |
@@ -142,10 +180,44 @@ source and asks for `--trust-scripts` when it contains scripts.
 | `apocryphon completion bash\|zsh\|fish` | Print shell completions (`--install` to write them). |
 | `apocryphon mcp` | Optional stdio MCP server (requires the MCP SDK). |
 
-Global flags: `--quiet`, `--verbose`, `--no-color`, `-y/--yes`. Commands that
-produce machine-readable output support `--json`
-(`status`, `list`, `search`, `validate`, `sync`, `clients list`, `pack list`,
-`backups list`, `tags`, `categories`, `browse`).
+### Global flags
+
+| Flag | Behavior |
+| ---- | -------- |
+| `--quiet` | Only warnings and errors. |
+| `--verbose` | Extra paths, git commands and context. |
+| `--no-color` | Disable ANSI colors (also `NO_COLOR`). |
+| `-y, --yes` | Accept confirmations (required without a TTY). |
+| `--json` | Machine-readable output on supported commands. |
+
+## State layout
+
+```text
+~/.apocryphon/
+├── config.json        # clients, registry, budget thresholds
+├── state.json         # global skills/packs, installed metadata, hashes
+├── projects.json      # per-project skills/packs
+├── vault/<id>/        # working copies (symlinked)
+├── pristine/<id>/     # merge baseline
+├── backups/<id>/<ts>/ # snapshots before overwrite/merge
+└── registry/          # local clone of the Git registry
+```
+
+`APOCRYPHON_HOME` overrides the state directory (useful for tests).
+
+## Repository layout
+
+```text
+packages/
+├── core/   # @apocryphon/core — vault, linter, sync, registry, diff/merge, status
+└── cli/    # @apocryphon/cli  — the `apocryphon` terminal interface
+catalog/    # minimal fixture registry used by tests and demos
+docs/       # UX contract and skill update policy
+```
+
+The official catalog lives in a separate repository:
+**[marlonbaltodano11/apocryphon-registry](https://github.com/marlonbaltodano11/apocryphon-registry)**.
+A future `@apocryphon/ui` package will reuse `@apocryphon/core`.
 
 ## Development
 
@@ -156,28 +228,25 @@ npm run typecheck
 npm test
 ```
 
-`catalog/` is a two-skill fixture registry used by tests and demos:
+Run the CLI from the repo:
 
 ```bash
 APOCRYPHON_HOME=/tmp/apo-demo node packages/cli/dist/cli.mjs init \
   --registry ./catalog --clients claude --yes
 ```
 
-See [`docs/cli-ux.md`](./docs/cli-ux.md) for the interactive UX contract.
+The test suite covers the linter, budget, git exclude block, sync engine, diff
+and merge logic, backups, fuzzy scoring and an end-to-end CLI flow (59 tests).
 
 ## Releasing
 
-CI (`.github/workflows/ci.yml`) runs typecheck, tests, build and a non-interactive
-smoke test on Node 20, 22 and 24.
-
-Publishing uses a GitHub Environment named **`npm`**:
+CI runs typecheck, tests, build and a non-interactive smoke test on Node 20, 22
+and 24. Publishing uses a GitHub Environment named **`npm`**:
 
 | Kind | Name | Purpose |
 | ---- | ---- | ------- |
 | Variable | `NPM_PUBLISH=true` | Kill switch (same pattern as the Hexalis workflows) |
 | Secret | `NPM_TOKEN` | npm automation token with publish access to `@apocryphon` |
-
-### Stable release
 
 ```bash
 npm version minor -w @apocryphon/core --no-git-tag-version
@@ -187,19 +256,19 @@ git tag v0.2.0      # must match @apocryphon/cli's version
 git push --follow-tags
 ```
 
-`release.yml` typechecks, tests, builds and publishes `@apocryphon/core` first and
-`@apocryphon/cli` afterwards, skipping versions that already exist on npm.
-Provenance is enabled by default and requires a public repository. A manual
-dispatch can override the dist-tag or run a dry run that only produces tarballs.
+`release.yml` publishes `@apocryphon/core` first and `@apocryphon/cli` afterwards,
+skipping versions already on npm. Snapshots: **Actions → Prerelease** publishes
+`<version>-<tag>.<run>` under the chosen dist-tag.
 
-### Snapshots
+## Contributing
 
-Run **Actions → Prerelease → Run workflow** with a dist-tag (default `next`).
-
-```bash
-npm install -g @apocryphon/cli@next
-```
+1. Open an issue describing the skill, bug or UX change.
+2. Keep changes focused and add tests for new behavior.
+3. Run `npm run typecheck && npm test && npm run build`.
+4. Use semantic commits (`feat(cli): …`, `fix(core): …`, `docs: …`).
+5. For catalog changes, open a PR in
+   [apocryphon-registry](https://github.com/marlonbaltodano11/apocryphon-registry).
 
 ## License
 
-MIT
+[MIT](LICENSE) © Marlon Baltodano

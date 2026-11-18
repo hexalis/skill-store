@@ -17,7 +17,7 @@ how local changes are detected, shown and merged.
 ```jsonc
 {
   "version": "1.0.0",
-  "source": { "type": "registry", "ref": "git@github.com:Majokan/apocryphon-registry.git" },
+  "source": { "type": "registry", "ref": "git@github.com:marlonbaltodano11/apocryphon-registry.git" },
   "contentHash": "sha256 of the whole skill",
   "fileHashes": { "SKILL.md": "…", "scripts/check.sh": "…" },
   "fileModes": { "scripts/check.sh": "755" },

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Apocryphon — skill store and manager for coding agents (CLI + core engine)",
+  "description": "Apocryphon \u2014 skill store and manager for coding agents (CLI + core engine)",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -24,5 +24,13 @@
     "tsup": "^9.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marlonbaltodano11/apocryphon.git"
+  },
+  "homepage": "https://github.com/marlonbaltodano11/apocryphon#readme",
+  "bugs": {
+    "url": "https://github.com/marlonbaltodano11/apocryphon/issues"
   }
 }
