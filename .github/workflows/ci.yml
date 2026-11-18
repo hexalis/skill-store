@@ -51,9 +51,6 @@ jobs:
     name: CLI smoke (non-interactive)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      HOME: ${{ runner.temp }}/home
-      APOCRYPHON_HOME: ${{ runner.temp }}/home/.apocryphon
     steps:
       - uses: actions/checkout@v4
 
@@ -66,6 +63,9 @@ jobs:
       - run: npm run build
 
       - name: Exercise the CLI without a TTY
+        env:
+          HOME: ${{ runner.temp }}/home
+          APOCRYPHON_HOME: ${{ runner.temp }}/home/.apocryphon
         run: |
           set -euo pipefail
           mkdir -p "$HOME" "$RUNNER_TEMP/project"
