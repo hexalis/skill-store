@@ -98,9 +98,22 @@ jobs:
           BASE=$(node -p "require('./packages/core/package.json').version" | cut -d- -f1)
           SNAPSHOT="${BASE}-${DIST_TAG}.${GITHUB_RUN_NUMBER}"
 
-          npm version "$SNAPSHOT" -w @apocryphon/core --no-git-tag-version --allow-same-version
-          npm version "$SNAPSHOT" -w @apocryphon/cli --no-git-tag-version --allow-same-version
-          npm pkg set "dependencies.@apocryphon/core=$SNAPSHOT" -w @apocryphon/cli
+          # Edit the manifests directly: `npm version` tries to resolve the
+          # not-yet-published @apocryphon/core dependency from the registry.
+          SNAPSHOT="$SNAPSHOT" node -e '
+          const fs = require("node:fs");
+          const snapshot = process.env.SNAPSHOT;
+          const update = (file, fn) => {
+            const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+            fn(pkg);
+            fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+          };
+          update("packages/core/package.json", (pkg) => { pkg.version = snapshot; });
+          update("packages/cli/package.json", (pkg) => {
+            pkg.version = snapshot;
+            pkg.dependencies["@apocryphon/core"] = snapshot;
+          });
+          '
 
           echo "version=$SNAPSHOT" >> "$GITHUB_OUTPUT"
           echo "Snapshot: $SNAPSHOT"
