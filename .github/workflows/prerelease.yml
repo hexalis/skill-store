@@ -1,38 +1,52 @@
 name: Prerelease
 
-# Manual npm snapshot, mirroring the Hexalis "changesets-prerelease" idea but
-# adapted to lockstep versions (no Changesets in this repo).
+# Manual npm snapshot.
 #
 # Publishes <base>-<dist-tag>.<run_number> for both packages and rewrites the
 # CLI dependency on core so the snapshot is installable:
-#   npm install -g @apocryphon/cli@next
+#   npm install -g @apocryphon/cli@dev
 #
-# Requires the same "npm" environment as the stable release:
-#   - Variable NPM_PUBLISH=true
-#   - Secret   NPM_TOKEN
+# Environments (all with NPM_PUBLISH=true and access to the repo NPM_TOKEN):
+#   - develop: development snapshots (dist-tag: dev)
+#   - qa:      QA snapshots (dist-tag: next or beta)
+#
+# Use dry-run=true to validate the pipeline and produce tarballs without
+# publishing.
 
 on:
   workflow_dispatch:
     inputs:
-      dist-tag:
-        description: "npm dist-tag for the snapshot (next, beta, staging...)"
+      environment:
+        description: "Target GitHub Environment"
         required: true
-        default: "next"
+        default: qa
+        type: choice
+        options:
+          - develop
+          - qa
+      dist-tag:
+        description: "npm dist-tag for the snapshot (dev, next, beta...)"
+        required: true
+        default: next
+      dry-run:
+        description: "Build and pack without publishing"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: prerelease-npm
+  group: prerelease-npm-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
   prerelease:
-    name: Publish snapshot
+    name: Publish snapshot (${{ inputs.environment }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: npm
+    environment: ${{ inputs.environment }}
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       DIST_TAG: ${{ inputs.dist-tag }}
@@ -42,13 +56,19 @@ jobs:
         env:
           NPM_PUBLISH: ${{ vars.NPM_PUBLISH }}
           HAS_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+          DRY_RUN: ${{ inputs.dry-run }}
         run: |
-          if [ "$NPM_PUBLISH" = "true" ] && [ "$HAS_TOKEN" = "true" ]; then
+          if [ "$DRY_RUN" = "true" ]; then
             echo "open=true" >> "$GITHUB_OUTPUT"
+            echo "mode=dry-run" >> "$GITHUB_OUTPUT"
+            echo "Dry run requested: build and pack only."
+          elif [ "$NPM_PUBLISH" = "true" ] && [ "$HAS_TOKEN" = "true" ]; then
+            echo "open=true" >> "$GITHUB_OUTPUT"
+            echo "mode=publish" >> "$GITHUB_OUTPUT"
             echo "Publishing enabled."
           else
             echo "open=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Publishing is off for environment 'npm' (NPM_PUBLISH=$NPM_PUBLISH, token present: $HAS_TOKEN)."
+            echo "::notice::Publishing is off for environment '${{ inputs.environment }}' (NPM_PUBLISH=$NPM_PUBLISH, token present: $HAS_TOKEN)."
           fi
 
       - if: steps.gate.outputs.open == 'true'
@@ -89,19 +109,45 @@ jobs:
         name: Build
         run: npm run build
 
-      - if: steps.gate.outputs.open == 'true'
+      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish'
         name: Publish snapshot
         run: |
           set -euo pipefail
           ARGS=(--access public --tag "$DIST_TAG" --provenance)
           npm publish -w @apocryphon/core "${ARGS[@]}"
           npm publish -w @apocryphon/cli "${ARGS[@]}"
+
+      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'dry-run'
+        name: Pack (dry run)
+        run: |
+          mkdir -p artifacts
+          npm pack -w @apocryphon/core --pack-destination artifacts
+          npm pack -w @apocryphon/cli --pack-destination artifacts
+          ls -la artifacts
+
+      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'dry-run'
+        uses: actions/upload-artifact@v4
+        with:
+          name: prerelease-tarballs
+          path: artifacts/*.tgz
+          retention-days: 7
+
+      - if: steps.gate.outputs.open == 'true'
+        name: Summary
+        run: |
           {
             echo "## npm prerelease"
             echo ""
-            echo "Published **${{ steps.snapshot.outputs.version }}** with dist-tag \`${DIST_TAG}\`."
-            echo ""
-            echo '```bash'
-            echo "npm install -g @apocryphon/cli@${DIST_TAG}"
-            echo '```'
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Environment | ${{ inputs.environment }} |"
+            echo "| Version | ${{ steps.snapshot.outputs.version }} |"
+            echo "| Dist tag | ${DIST_TAG} |"
+            echo "| Mode | ${{ steps.gate.outputs.mode }} |"
+            if [ "${{ steps.gate.outputs.mode }}" = "publish" ]; then
+              echo ""
+              echo '```bash'
+              echo "npm install -g @apocryphon/cli@${DIST_TAG}"
+              echo '```'
+            fi
           } >> "$GITHUB_STEP_SUMMARY"

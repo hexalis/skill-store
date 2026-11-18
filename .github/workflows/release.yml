@@ -6,7 +6,7 @@ name: Release
 #   - Pushing a tag like v0.1.0 (the tag must match @apocryphon/cli's version).
 #   - Manual dispatch (optionally with a dry run).
 #
-# Requires a GitHub Environment named "npm" with:
+# Requires a GitHub Environment named "production" with:
 #   - Variable NPM_PUBLISH=true (publishing switch, mirroring the Hexalis pattern)
 #   - Secret   NPM_TOKEN    (npm automation token with publish access to @apocryphon)
 #
@@ -44,7 +44,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: npm
+    environment: production
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       DIST_TAG: ${{ inputs.dist-tag || 'latest' }}

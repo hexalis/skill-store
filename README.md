@@ -241,12 +241,20 @@ and merge logic, backups, fuzzy scoring and an end-to-end CLI flow (59 tests).
 ## Releasing
 
 CI runs typecheck, tests, build and a non-interactive smoke test on Node 20, 22
-and 24. Publishing uses a GitHub Environment named **`npm`**:
+and 24. Publishing uses three GitHub Environments; all of them have
+`NPM_PUBLISH=true`, and `NPM_TOKEN` is stored as a **repository** secret so every
+environment can read it.
 
-| Kind | Name | Purpose |
-| ---- | ---- | ------- |
-| Variable | `NPM_PUBLISH=true` | Kill switch (same pattern as the Hexalis workflows) |
-| Secret | `NPM_TOKEN` | npm automation token with publish access to `@apocryphon` |
+| Environment | Used by | Dist-tag | Purpose |
+| ----------- | ------- | -------- | ------- |
+| `develop` | Prerelease (manual) | `dev` | Development snapshots |
+| `qa` | Prerelease (manual) | `next` / `beta` | QA snapshots |
+| `production` | Release (tag or manual) | `latest` | Stable releases |
+
+`production` can be protected with required reviewers or a deployment branch
+policy once the release cadence is settled.
+
+### Stable release
 
 ```bash
 npm version minor -w @apocryphon/core --no-git-tag-version
@@ -256,9 +264,36 @@ git tag v0.2.0      # must match @apocryphon/cli's version
 git push --follow-tags
 ```
 
-`release.yml` publishes `@apocryphon/core` first and `@apocryphon/cli` afterwards,
-skipping versions already on npm. Snapshots: **Actions → Prerelease** publishes
-`<version>-<tag>.<run>` under the chosen dist-tag.
+`release.yml` runs in the `production` environment, typechecks, tests, builds
+and publishes `@apocryphon/core` first and `@apocryphon/cli` afterwards, skipping
+versions that already exist on npm. Provenance is enabled by default and
+requires a public repository. A manual dispatch can override the dist-tag or run
+a dry run that only produces tarballs.
+
+### Snapshots
+
+```bash
+# Development snapshot (dist-tag: dev)
+gh workflow run prerelease.yml -f environment=develop -f dist-tag=dev
+
+# QA snapshot (dist-tag: next)
+gh workflow run prerelease.yml -f environment=qa -f dist-tag=next
+
+# Dry run (build + pack only, no publish)
+gh workflow run prerelease.yml -f environment=develop -f dist-tag=dev -f dry-run=true
+```
+
+`prerelease.yml` rewrites both packages to `<base>-<dist-tag>.<run_number>` and
+points the CLI dependency at that core snapshot so the pair is installable:
+
+```bash
+npm install -g @apocryphon/cli@next
+```
+
+> These workflows are self-contained copies adapted from
+> `hexalis/github-workflows`. If you later centralize them, replace the bodies with
+> `uses:` calls once they support npm workspaces.
+
 
 ## Contributing
 
