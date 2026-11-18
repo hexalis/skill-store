@@ -23,6 +23,7 @@ import {
   type RegistryLocation,
   type State,
   type SyncReport,
+  type ProgressReporter,
 } from '@apocryphon/core'
 
 export interface CliContext {
@@ -94,25 +95,27 @@ export async function saveProjectEntry(
 export interface RegistryHandle {
   location: RegistryLocation
   index: RegistryIndex
+  /** Snapshot consumable by `collectStatus`. */
+  snapshot: { dir: string; index: RegistryIndex }
 }
 
 export async function loadRegistry(
   ctx: CliContext,
-  options: { pull?: boolean } = {},
+  options: { pull?: boolean; reporter?: ProgressReporter } = {},
 ): Promise<RegistryHandle | null> {
   const source = ctx.config.registry?.source
   if (!source) return null
 
   const location = resolveRegistryLocation(source, ctx.paths)
-  await ensureRegistry(location, { pull: options.pull ?? false })
+  await ensureRegistry(location, { pull: options.pull ?? false, reporter: options.reporter })
   const index = await readRegistryIndex(location)
   ctx.state = mergeRegistryPacks(ctx.state, index)
-  return { location, index }
+  return { location, index, snapshot: { dir: location.dir, index } }
 }
 
 export async function tryLoadRegistry(
   ctx: CliContext,
-  options: { pull?: boolean } = {},
+  options: { pull?: boolean; reporter?: ProgressReporter } = {},
 ): Promise<RegistryHandle | null> {
   try {
     return await loadRegistry(ctx, options)
@@ -148,6 +151,7 @@ export interface SyncContextOptions {
   entry?: ProjectEntry | null
   registryPacks?: Record<string, Pack> | null
   dryRun?: boolean
+  reporter?: ProgressReporter
 }
 
 export async function syncContext(
@@ -162,6 +166,7 @@ export async function syncContext(
     entry: options.entry === undefined ? ctx.entry : options.entry,
     registryPacks: options.registryPacks ?? null,
     dryRun: options.dryRun ?? false,
+    reporter: options.reporter,
   })
 }
 

@@ -1,4 +1,4 @@
-import pc from 'picocolors'
+import { c as pc } from './colors.js'
 
 export async function runSafely(fn: () => Promise<void>): Promise<void> {
   try {

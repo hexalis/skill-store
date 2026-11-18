@@ -1,4 +1,4 @@
-import pc from 'picocolors'
+import { c as pc } from './colors.js'
 import type {
   ContextBudget,
   LintIssue,
