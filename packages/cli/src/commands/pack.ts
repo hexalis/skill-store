@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import type { ProjectEntry } from '@apocryphon/core'
 import {
   activePacks,
   availablePacks,
@@ -9,16 +10,16 @@ import {
   syncContext,
   tryLoadRegistry,
 } from '../lib/context.js'
+import { addGlobalOptions } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
 import { heading, printJson, printSyncReport, table, truncate } from '../lib/output.js'
-import type { ProjectEntry } from '@apocryphon/core'
 
 export function packCommand(): Command {
   const command = new Command('pack').description(
     'Inspect and apply packs (named groups of skills)',
   )
 
-  command
+  const list = command
     .command('list')
     .description('List packs known locally or in the registry')
     .option('-p, --project <dir>', 'Project directory (defaults to cwd)')
@@ -75,7 +76,7 @@ export function packCommand(): Command {
       })
     })
 
-  command
+  const apply = command
     .command('apply')
     .description('Activate one or more packs')
     .argument('<packs...>', 'Pack names')
@@ -123,7 +124,7 @@ export function packCommand(): Command {
       },
     )
 
-  command
+  const remove = command
     .command('remove')
     .description('Deactivate one or more packs')
     .argument('<packs...>', 'Pack names')
@@ -160,5 +161,9 @@ export function packCommand(): Command {
       },
     )
 
+  addGlobalOptions(list)
+  addGlobalOptions(apply)
+  addGlobalOptions(remove)
+  addGlobalOptions(command)
   return command
 }

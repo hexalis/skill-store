@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import * as p from '@clack/prompts'
-import pc from 'picocolors'
+import { c as pc } from '../lib/colors.js'
 import {
   CLIENT_IDS,
   CLIENT_LABELS,
@@ -11,6 +11,7 @@ import {
   type ClientId,
 } from '@apocryphon/core'
 import { runSafely, isInteractive } from '../lib/run.js'
+import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { bullet, heading, kv } from '../lib/output.js'
 
 async function chooseClients(
@@ -31,7 +32,7 @@ async function chooseClients(
 }
 
 export function initCommand(): Command {
-  return new Command('init')
+  const command = new Command('init')
     .description(
       'Create ~/.apocryphon, configure clients and optionally connect a skill registry',
     )
@@ -50,6 +51,7 @@ export function initCommand(): Command {
         yes?: boolean
       }) => {
         await runSafely(async () => {
+          const ui = uiFromArgv()
           const paths = resolvePaths()
           const detected = await detectClientPresence()
 
@@ -72,6 +74,7 @@ export function initCommand(): Command {
             registrySource: options.registry ?? null,
             enabledClients: enabled,
             force: options.force ?? false,
+            reporter: ui.reporter(),
           })
 
           heading('Apocryphon initialized')
@@ -114,4 +117,7 @@ export function initCommand(): Command {
         })
       },
     )
+
+  addGlobalOptions(command)
+  return command
 }

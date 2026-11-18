@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import pc from 'picocolors'
+import { c as pc } from '../lib/colors.js'
 import {
   CLIENT_IDS,
   CLIENT_LABELS,
@@ -13,6 +13,7 @@ import {
   syncContext,
   type CliContext,
 } from '../lib/context.js'
+import { addGlobalOptions } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
 import { heading, printSyncReport, table } from '../lib/output.js'
 
@@ -51,8 +52,9 @@ export function clientsCommand(): Command {
     'Inspect or enable/disable the coding clients Apocryphon manages',
   )
 
-  command
-    .command('list')
+  addGlobalOptions(
+    command
+      .command('list')
     .description('Show detected and enabled clients, their directories and link counts')
     .option('--json', 'Print machine-readable JSON')
     .action(async (options: { json?: boolean }) => {
@@ -90,23 +92,29 @@ export function clientsCommand(): Command {
           ),
         )
       })
-    })
+    }),
+  )
 
-  command
-    .command('enable')
+  addGlobalOptions(
+    command
+      .command('enable')
     .description('Enable one or more clients and create their symlinks')
     .argument('<clients...>', 'claude, cursor, opencode or all')
     .action(async (clients: string[]) => {
       await runSafely(() => setEnabled(clients, true))
-    })
+    }),
+  )
 
-  command
-    .command('disable')
+  addGlobalOptions(
+    command
+      .command('disable')
     .description('Disable one or more clients and remove their managed symlinks')
     .argument('<clients...>', 'claude, cursor, opencode or all')
     .action(async (clients: string[]) => {
       await runSafely(() => setEnabled(clients, false))
-    })
+    }),
+  )
 
+  addGlobalOptions(command)
   return command
 }

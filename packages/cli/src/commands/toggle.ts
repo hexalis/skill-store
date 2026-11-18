@@ -1,12 +1,13 @@
 import { Command } from 'commander'
 import { loadContext } from '../lib/context.js'
 import { toggleItems } from '../lib/actions.js'
+import { addGlobalOptions } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
 import { heading, printSyncReport } from '../lib/output.js'
 
 export function createToggleCommand(enable: boolean): Command {
   const verb = enable ? 'Activate' : 'Deactivate'
-  return new Command(enable ? 'enable' : 'disable')
+  const command = new Command(enable ? 'enable' : 'disable')
     .description(`${verb} skills or packs globally or for the current project`)
     .argument('<items...>', 'Skill ids or pack names')
     .option('-g, --global', 'Apply to every project')
@@ -33,6 +34,9 @@ export function createToggleCommand(enable: boolean): Command {
         })
       },
     )
+
+  addGlobalOptions(command)
+  return command
 }
 
 export function enableCommand(): Command {
