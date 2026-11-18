@@ -88,32 +88,28 @@ describe('apocryphon cli', () => {
     assert.equal(await exists(path.join(apocryphonHome(), 'config.json')), true)
     assert.equal(await exists(path.join(apocryphonHome(), 'state.json')), true)
     assert.equal(await exists(path.join(apocryphonHome(), 'vault')), true)
+    assert.equal(await exists(path.join(apocryphonHome(), 'pristine')), true)
+    assert.equal(await exists(path.join(apocryphonHome(), 'backups')), true)
   })
 
-  it('searches the catalog', () => {
-    const result = run(['search', 'error'])
+  it('searches the catalog with fuzzy ranking', () => {
+    const result = run(['search', 'review'])
     assert.equal(result.status, 0, result.stderr)
-    assert.match(result.stdout, /api-error-handling/)
+    assert.match(result.stdout, /fixture-review/)
+    assert.match(result.stdout, /Score/)
   })
 
   it('installs skills from the registry', async () => {
-    const result = run([
-      'install',
-      'workflow-read-only-plan',
-      'workflow-atomic-commits',
-      'workflow-review-triage',
-      'api-error-handling',
-    ])
+    const result = run(['install', 'fixture-planning', 'fixture-review'])
     assert.equal(result.status, 0, result.stderr)
 
-    for (const id of [
-      'workflow-read-only-plan',
-      'workflow-atomic-commits',
-      'workflow-review-triage',
-      'api-error-handling',
-    ]) {
+    for (const id of ['fixture-planning', 'fixture-review']) {
       assert.equal(
         await exists(path.join(apocryphonHome(), 'vault', id, 'SKILL.md')),
+        true,
+      )
+      assert.equal(
+        await exists(path.join(apocryphonHome(), 'pristine', id, 'SKILL.md')),
         true,
       )
     }
@@ -126,33 +122,33 @@ describe('apocryphon cli', () => {
   })
 
   it('enables a global skill and creates only the Claude symlink', async () => {
-    const result = run(['enable', '--global', 'workflow-atomic-commits'])
+    const result = run(['enable', '--global', 'fixture-planning'])
     assert.equal(result.status, 0, result.stderr)
 
-    const link = path.join(userHome, '.claude', 'skills', 'workflow-atomic-commits')
+    const link = path.join(userHome, '.claude', 'skills', 'fixture-planning')
     assert.equal(await isSymlink(link), true)
     assert.equal(
-      await exists(path.join(userHome, '.config', 'opencode', 'skills', 'workflow-atomic-commits')),
+      await exists(path.join(userHome, '.config', 'opencode', 'skills', 'fixture-planning')),
       false,
     )
   })
 
   it('enables a project skill and keeps git status clean', async () => {
-    const result = run(['enable', 'api-error-handling'])
+    const result = run(['enable', 'fixture-review'])
     assert.equal(result.status, 0, result.stderr)
 
-    const link = path.join(project, '.claude', 'skills', 'api-error-handling')
+    const link = path.join(project, '.claude', 'skills', 'fixture-review')
     assert.equal(await isSymlink(link), true)
 
     const exclude = await fs.readFile(path.join(project, '.git', 'info', 'exclude'), 'utf8')
-    assert.match(exclude, /\.claude\/skills\/api-error-handling/)
+    assert.match(exclude, /\.claude\/skills\/fixture-review/)
 
     const status = git(['status', '--porcelain'])
     assert.equal(status.status, 0)
     assert.equal(status.stdout.trim(), '')
   })
 
-  it('reports status as JSON', () => {
+  it('reports status as JSON with customization fields', () => {
     const result = run(['status', '--json'])
     assert.equal(result.status, 0, result.stderr)
 
@@ -160,20 +156,31 @@ describe('apocryphon cli', () => {
       active: { global: string[]; project: string[] }
       budget: { level: string }
       exclude: { entries: string[] } | null
+      categoryCounts: Record<string, number>
+      skills: Array<{ id: string; customized: boolean; updateAvailable: boolean }>
     }
 
-    assert.ok(status.active.global.includes('workflow-atomic-commits'))
-    assert.ok(status.active.project.includes('api-error-handling'))
+    assert.ok(status.active.global.includes('fixture-planning'))
+    assert.ok(status.active.project.includes('fixture-review'))
     assert.equal(status.exclude?.entries.length, 1)
     assert.ok(['green', 'yellow', 'red'].includes(status.budget.level))
+    assert.equal(typeof status.categoryCounts.workflow, 'number')
+    assert.ok(status.skills.every((row) => typeof row.customized === 'boolean'))
   })
 
   it('lists installed skills as JSON', () => {
     const result = run(['list', '--json'])
     assert.equal(result.status, 0, result.stderr)
     const rows = JSON.parse(result.stdout) as Array<{ id: string; installed: boolean }>
-    assert.equal(rows.length, 4)
+    assert.equal(rows.length, 2)
     assert.ok(rows.every((row) => row.installed))
+  })
+
+  it('filters list by category', () => {
+    const result = run(['list', '--category', 'domain'])
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /fixture-review/)
+    assert.doesNotMatch(result.stdout, /fixture-planning/)
   })
 
   it('validates the vault successfully', () => {
@@ -182,11 +189,17 @@ describe('apocryphon cli', () => {
     assert.match(result.stdout, /All skills passed validation/)
   })
 
+  it('validates the registry in strict mode', () => {
+    const result = run(['validate', '--registry', '--strict'])
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /All skills passed validation/)
+  })
+
   it('applies a pack and expands it into project symlinks', async () => {
-    const result = run(['pack', 'apply', 'core-discipline'])
+    const result = run(['pack', 'apply', 'fixtures'])
     assert.equal(result.status, 0, result.stderr)
 
-    for (const id of ['workflow-read-only-plan', 'workflow-atomic-commits', 'workflow-review-triage']) {
+    for (const id of ['fixture-planning', 'fixture-review']) {
       assert.equal(await isSymlink(path.join(project, '.claude', 'skills', id)), true)
     }
 
@@ -194,15 +207,15 @@ describe('apocryphon cli', () => {
       active: { project: string[] }
       budget: { count: number }
     }
-    assert.ok(status.active.project.includes('workflow-read-only-plan'))
-    assert.ok(status.budget.count >= 4)
+    assert.ok(status.active.project.includes('fixture-planning'))
+    assert.ok(status.budget.count >= 2)
   })
 
   it('disables a global skill and removes its symlink', async () => {
-    const result = run(['disable', '--global', 'workflow-atomic-commits'])
+    const result = run(['disable', '--global', 'fixture-planning'])
     assert.equal(result.status, 0, result.stderr)
     assert.equal(
-      await isSymlink(path.join(userHome, '.claude', 'skills', 'workflow-atomic-commits')),
+      await isSymlink(path.join(userHome, '.claude', 'skills', 'fixture-planning')),
       false,
     )
   })
@@ -211,13 +224,27 @@ describe('apocryphon cli', () => {
     const result = run(['clients', 'disable', 'claude'])
     assert.equal(result.status, 0, result.stderr)
 
-    assert.equal(await exists(path.join(project, '.claude', 'skills', 'api-error-handling')), false)
+    assert.equal(await exists(path.join(project, '.claude', 'skills', 'fixture-review')), false)
     assert.equal(
-      await exists(path.join(apocryphonHome(), 'vault', 'api-error-handling', 'SKILL.md')),
+      await exists(path.join(apocryphonHome(), 'vault', 'fixture-review', 'SKILL.md')),
       true,
     )
 
     const exclude = await fs.readFile(path.join(project, '.git', 'info', 'exclude'), 'utf8')
-    assert.equal(exclude.includes('.claude/skills/api-error-handling'), false)
+    assert.equal(exclude.includes('.claude/skills/fixture-review'), false)
+  })
+
+  it('prints shell completions and completion candidates', () => {
+    const script = run(['completion', 'bash'])
+    assert.equal(script.status, 0, script.stderr)
+    assert.match(script.stdout, /complete -F _apocryphon_complete apocryphon/)
+
+    const commands = run(['__complete', 'words', 'en'])
+    assert.equal(commands.status, 0)
+    assert.match(commands.stdout, /enable/)
+
+    const skills = run(['__complete', 'words', 'enable', ''])
+    assert.equal(skills.status, 0)
+    assert.match(skills.stdout, /fixture-planning/)
   })
 })
