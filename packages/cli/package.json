@@ -8,11 +8,12 @@
     "node": ">=20"
   },
   "bin": {
-    "apocryphon": "./dist/cli.mjs"
+    "apocryphon": "dist/cli.mjs"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
