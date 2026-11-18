@@ -91,6 +91,51 @@ apocryphon status
 `status --json`, `list --json` and `validate --json` make the CLI scriptable and
 ready for the future UI package.
 
+## Releasing
+
+CI (`.github/workflows/ci.yml`) runs typecheck, tests and build on Node 20, 22 and
+24, and uploads the npm tarballs as artifacts.
+
+Publishing uses a GitHub Environment named **`npm`**:
+
+| Kind | Name | Purpose |
+| ---- | ---- | ------- |
+| Variable | `NPM_PUBLISH=true` | Kill switch (same pattern as the Hexalis workflows) |
+| Secret | `NPM_TOKEN` | npm automation token with publish access to `@apocryphon` |
+
+The `@apocryphon` scope must exist on npm and the token must be allowed to publish
+to it.
+
+### Stable release
+
+```bash
+npm version minor -w @apocryphon/core --no-git-tag-version
+npm version minor -w @apocryphon/cli  --no-git-tag-version
+git commit -am "chore(release): v0.2.0"
+git tag v0.2.0      # must match @apocryphon/cli's version
+git push --follow-tags
+```
+
+`release.yml` typechecks, tests, builds and publishes `@apocryphon/core` first and
+`@apocryphon/cli` afterwards, skipping versions that already exist on npm.
+Provenance is enabled by default and requires a public repository. A manual
+dispatch can override the dist-tag or run a dry run that only produces tarballs.
+
+### Snapshots
+
+Run **Actions → Prerelease → Run workflow** with a dist-tag (default `next`).
+
+```bash
+npm install -g @apocryphon/cli@next
+```
+
+`prerelease.yml` rewrites both packages to `<base>-<dist-tag>.<run_number>` and
+points the CLI dependency at that core snapshot so the pair is installable.
+
+> These workflows are self-contained copies adapted from
+> `hexalis/github-workflows`. If you later centralize them, replace the bodies with
+> `uses:` calls once they support npm workspaces.
+
 ## Development
 
 ```bash

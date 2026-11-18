@@ -1,0 +1,107 @@
+name: Prerelease
+
+# Manual npm snapshot, mirroring the Hexalis "changesets-prerelease" idea but
+# adapted to lockstep versions (no Changesets in this repo).
+#
+# Publishes <base>-<dist-tag>.<run_number> for both packages and rewrites the
+# CLI dependency on core so the snapshot is installable:
+#   npm install -g @apocryphon/cli@next
+#
+# Requires the same "npm" environment as the stable release:
+#   - Variable NPM_PUBLISH=true
+#   - Secret   NPM_TOKEN
+
+on:
+  workflow_dispatch:
+    inputs:
+      dist-tag:
+        description: "npm dist-tag for the snapshot (next, beta, staging...)"
+        required: true
+        default: "next"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: prerelease-npm
+  cancel-in-progress: false
+
+jobs:
+  prerelease:
+    name: Publish snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      DIST_TAG: ${{ inputs.dist-tag }}
+    steps:
+      - name: Publishing gate
+        id: gate
+        env:
+          NPM_PUBLISH: ${{ vars.NPM_PUBLISH }}
+          HAS_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+        run: |
+          if [ "$NPM_PUBLISH" = "true" ] && [ "$HAS_TOKEN" = "true" ]; then
+            echo "open=true" >> "$GITHUB_OUTPUT"
+            echo "Publishing enabled."
+          else
+            echo "open=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Publishing is off for environment 'npm' (NPM_PUBLISH=$NPM_PUBLISH, token present: $HAS_TOKEN)."
+          fi
+
+      - if: steps.gate.outputs.open == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.gate.outputs.open == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - if: steps.gate.outputs.open == 'true'
+        name: Install
+        run: npm ci
+
+      - if: steps.gate.outputs.open == 'true'
+        name: Snapshot versions
+        id: snapshot
+        run: |
+          set -euo pipefail
+          if ! echo "$DIST_TAG" | grep -Eq '^[a-z][a-z0-9-]*$'; then
+            echo "::error::Invalid dist-tag '$DIST_TAG'. Use lowercase letters, digits and hyphens."
+            exit 1
+          fi
+
+          BASE=$(node -p "require('./packages/core/package.json').version" | cut -d- -f1)
+          SNAPSHOT="${BASE}-${DIST_TAG}.${GITHUB_RUN_NUMBER}"
+
+          npm version "$SNAPSHOT" -w @apocryphon/core --no-git-tag-version --allow-same-version
+          npm version "$SNAPSHOT" -w @apocryphon/cli --no-git-tag-version --allow-same-version
+          npm pkg set "dependencies.@apocryphon/core=$SNAPSHOT" -w @apocryphon/cli
+
+          echo "version=$SNAPSHOT" >> "$GITHUB_OUTPUT"
+          echo "Snapshot: $SNAPSHOT"
+
+      - if: steps.gate.outputs.open == 'true'
+        name: Build
+        run: npm run build
+
+      - if: steps.gate.outputs.open == 'true'
+        name: Publish snapshot
+        run: |
+          set -euo pipefail
+          ARGS=(--access public --tag "$DIST_TAG" --provenance)
+          npm publish -w @apocryphon/core "${ARGS[@]}"
+          npm publish -w @apocryphon/cli "${ARGS[@]}"
+          {
+            echo "## npm prerelease"
+            echo ""
+            echo "Published **${{ steps.snapshot.outputs.version }}** with dist-tag \`${DIST_TAG}\`."
+            echo ""
+            echo '```bash'
+            echo "npm install -g @apocryphon/cli@${DIST_TAG}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
