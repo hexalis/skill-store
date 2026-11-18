@@ -99,7 +99,7 @@ export async function runUse(options: UseOptions): Promise<void> {
 
   const availableSkills = new Set(sorted.map((skill) => skill.id))
   const skillSelection = await p.autocompleteMultiselect<string>({
-    message: 'Skills (type to filter, space to toggle)',
+    message: 'Skills (type to filter, Tab to toggle)',
     options: sorted.map((skill) => ({
       value: skill.id,
       label: `${skill.id}`,

@@ -43,6 +43,21 @@ command must follow it.
 | `0` | Success (including a cancelled prompt). |
 | `1` | Execution error, validation failure, missing dependency or aborted destructive operation. |
 
+## Interactive pickers
+
+The fuzzy pickers (`use`, `install`, `find`, `browse`) share the same keys:
+
+| Key | Action |
+| --- | --- |
+| Type | Filter by name, category, tag or description. |
+| `↑` / `↓` | Move the cursor. |
+| `Tab` | Toggle the focused item (multiselect pickers). |
+| `Enter` | Confirm the selection or the highlighted option. |
+| `Esc` / `Ctrl+C` | Cancel without changing anything (exit 0). |
+
+`find` and `browse` show a preview of the selected skill and then a small action
+menu (enable in this project, enable globally, disable, install).
+
 ## Destructive operations
 
 Any operation that overwrites user data must:
