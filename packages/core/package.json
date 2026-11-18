@@ -19,6 +19,9 @@
     "dist",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "apocryphon",
     "agent-skills",
