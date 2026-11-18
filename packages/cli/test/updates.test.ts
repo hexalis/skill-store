@@ -29,7 +29,7 @@ function run(args: string[], options: { cwd?: string } = {}): RunResult {
   const result = spawnSync(process.execPath, ['--import', tsxLoader, cliEntry, ...args], {
     cwd: options.cwd ?? project,
     encoding: 'utf8',
-    env: { ...process.env, HOME: userHome, APOCRYPHON_HOME: home() },
+    env: { ...process.env, HOME: userHome, APOCRYPHON_HOME: home(), NO_COLOR: '1' },
   })
   return {
     status: result.status,

@@ -32,6 +32,7 @@ function run(args: string[], options: { cwd?: string; stdin?: string } = {}): Ru
       ...process.env,
       HOME: userHome,
       APOCRYPHON_HOME: apocryphonHome(),
+      NO_COLOR: '1',
     },
     input: options.stdin,
   })
