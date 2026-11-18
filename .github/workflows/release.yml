@@ -32,7 +32,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -143,6 +143,29 @@ jobs:
 
           publish_workspace "@apocryphon/core" "@apocryphon/core" "${{ steps.versions.outputs.core }}"
           publish_workspace "@apocryphon/cli" "@apocryphon/cli" "${{ steps.versions.outputs.cli }}"
+
+      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish'
+        name: Pack release assets
+        run: |
+          mkdir -p release-assets
+          npm pack -w @apocryphon/core --pack-destination release-assets
+          npm pack -w @apocryphon/cli --pack-destination release-assets
+
+      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish' && github.ref_type == 'tag'
+        name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "::notice::GitHub Release $GITHUB_REF_NAME already exists."
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/*.tgz \
+              --title "Apocryphon $GITHUB_REF_NAME" \
+              --generate-notes \
+              --verify-tag \
+              --latest
+          fi
 
       - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'dry-run'
         name: Pack (dry run)

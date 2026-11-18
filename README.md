@@ -270,6 +270,10 @@ versions that already exist on npm. Provenance is enabled by default and
 requires a public repository. A manual dispatch can override the dist-tag or run
 a dry run that only produces tarballs.
 
+When the run was triggered by a tag, the workflow also creates a **GitHub
+Release** for that tag with auto-generated notes and the npm tarballs attached.
+Snapshot runs (`prerelease.yml`) do not create GitHub Releases.
+
 ### Snapshots
 
 ```bash
