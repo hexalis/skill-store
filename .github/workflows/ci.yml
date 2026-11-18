@@ -47,6 +47,47 @@ jobs:
           npm pack -w @apocryphon/core --dry-run
           npm pack -w @apocryphon/cli --dry-run
 
+  smoke:
+    name: CLI smoke (non-interactive)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HOME: ${{ runner.temp }}/home
+      APOCRYPHON_HOME: ${{ runner.temp }}/home/.apocryphon
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Exercise the CLI without a TTY
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME" "$RUNNER_TEMP/project"
+          cd "$RUNNER_TEMP/project"
+          git init -q
+
+          CLI="$GITHUB_WORKSPACE/packages/cli/dist/cli.mjs"
+
+          node "$CLI" init --registry "$GITHUB_WORKSPACE/catalog" --clients claude --yes
+          node "$CLI" install fixture-planning fixture-review
+          node "$CLI" enable --global fixture-planning
+          node "$CLI" enable fixture-review
+          node "$CLI" pack apply fixtures
+          node "$CLI" sync --dry-run
+          node "$CLI" status --json > status.json
+          node -e "const s = require('./status.json'); if (!s.skills.length) process.exit(1)"
+          node "$CLI" list --json > list.json
+          node -e "const rows = require('./list.json'); if (rows.length !== 2) process.exit(1)"
+          node "$CLI" completion bash > /dev/null
+          node "$CLI" __complete words en | grep -q enable
+          node "$CLI" validate --registry --strict
+
   package:
     name: Package artifacts
     runs-on: ubuntu-latest
