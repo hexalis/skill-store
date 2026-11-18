@@ -74,16 +74,52 @@ export const ConfigSchema = z.object({
 })
 export type Config = z.infer<typeof ConfigSchema>
 
+export const SourceSchema = z.object({
+  type: z.enum(['registry', 'local', 'git']),
+  ref: z.string().nullable().default(null),
+})
+export type SkillSource = z.infer<typeof SourceSchema>
+
+function normalizeSource(value: unknown): SkillSource | null {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'string') return { type: 'registry', ref: value }
+  const parsed = SourceSchema.safeParse(value)
+  return parsed.success ? parsed.data : null
+}
+
 export const InstalledSkillSchema = z.object({
   version: z.string().optional(),
   installedAt: z.string(),
   updatedAt: z.string().optional(),
-  /** Registry source the skill was installed from (null for local skills). */
-  source: z.string().nullable().default(null),
+  /**
+   * Where the skill came from. Legacy installs stored a string (the registry
+   * source); those are normalized to `{ type: 'registry', ref }`.
+   */
+  source: z
+    .union([z.string(), SourceSchema])
+    .nullable()
+    .default(null)
+    .transform((value) => normalizeSource(value)),
   /** SHA-256 of every file inside `scripts/`, relative to the skill dir. */
   scriptChecksums: z.record(z.string(), z.string()).default({}),
+  /** SHA-256 of the complete skill tree (content + modes). */
+  contentHash: z.string().optional(),
+  /** Per-file SHA-256, keyed by relative posix path. */
+  fileHashes: z.record(z.string(), z.string()).default({}),
+  /** Per-file permission bits (for example "755"), keyed by relative path. */
+  fileModes: z.record(z.string(), z.string()).default({}),
+  /** True when the working copy differs from the pristine baseline. */
+  customized: z.boolean().default(false),
+  /** Whether a pristine baseline exists for three-way merges. */
+  baseline: z.enum(['known', 'unknown']).default('unknown'),
+  lastMergedAt: z.string().nullable().optional(),
 })
 export type InstalledSkill = z.infer<typeof InstalledSkillSchema>
+
+export function sourceRef(source: InstalledSkill['source']): string | null {
+  if (!source) return null
+  return source.ref
+}
 
 export const PackSchema = z.object({
   description: z.string().optional(),
@@ -118,6 +154,19 @@ export const ProjectsSchema = z.object({
 })
 export type Projects = z.infer<typeof ProjectsSchema>
 
+export const TaxonomyTagSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().optional(),
+  description: z.string().optional(),
+})
+export type TaxonomyTag = z.infer<typeof TaxonomyTagSchema>
+
+export const TaxonomySchema = z.object({
+  categories: z.array(z.string().min(1)).default(['domain', 'workflow', 'meta']),
+  tags: z.array(TaxonomyTagSchema).default([]),
+})
+export type Taxonomy = z.infer<typeof TaxonomySchema>
+
 export const RegistrySkillEntrySchema = z.object({
   id: SkillIdSchema,
   version: z.string().optional(),
@@ -132,6 +181,7 @@ export type RegistrySkillEntry = z.infer<typeof RegistrySkillEntrySchema>
 export const RegistryIndexSchema = z.object({
   name: z.string().min(1),
   version: z.literal(1),
+  taxonomy: TaxonomySchema.optional(),
   packs: z.record(z.string(), PackSchema),
   skills: z.array(RegistrySkillEntrySchema),
 })

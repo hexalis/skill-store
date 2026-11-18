@@ -8,19 +8,22 @@ import {
   type Pack,
   type ProjectEntry,
   type Projects,
+  type RegistryIndex,
   type State,
 } from './schemas.js'
 import { expandHome, findRegisteredProject, normalizeProjectPath, type ApocryphonPaths } from './paths.js'
+import { type SkillLintResult } from './skill-linter.js'
 import { listVaultSkills } from './vault.js'
 import { computeContextBudget, type ContextBudget } from './context-budget.js'
 import { expandActiveSkills } from './packs.js'
 import { coveredBy } from './clients.js'
 import { readGitExclude } from './git-exclude.js'
-import {
-  verifySkillIntegrity,
-  type IntegrityReport,
-  type SkillLintResult,
-} from './skill-linter.js'
+import { verifySkillIntegrity, type IntegrityReport } from './skill-linter.js'
+import { buildManifest } from './skill-files.js'
+import { pathExists } from './store.js'
+import { diffManifests } from './skill-diff.js'
+import { planSkillUpdate } from './skill-updates.js'
+import { registrySkillDir } from './registry.js'
 
 export interface ClientStatus {
   id: ClientId
@@ -36,11 +39,16 @@ export interface SkillStatusRow {
   id: string
   description: string | null
   category: string | null
+  tags: string[]
+  version: string | null
   installed: boolean
   activeGlobal: boolean
   activeProject: boolean
   lintErrors: number
   lintWarnings: number
+  customized: boolean
+  updateAvailable: boolean
+  baseline: 'known' | 'unknown'
 }
 
 export interface StatusReport {
@@ -60,6 +68,12 @@ export interface StatusReport {
   integrity: IntegrityReport[]
   lintIssues: Array<{ id: string; errors: string[]; warnings: string[] }>
   exclude: { file: string; entries: string[] } | null
+  categoryCounts: Record<string, number>
+}
+
+export interface RegistrySnapshot {
+  dir: string
+  index: RegistryIndex
 }
 
 export interface CollectStatusOptions {
@@ -69,6 +83,7 @@ export interface CollectStatusOptions {
   projects: Projects
   projectRoot?: string | null
   registryPacks?: Record<string, Pack> | null
+  registry?: RegistrySnapshot | null
   homeDir?: string
 }
 
@@ -109,7 +124,73 @@ async function countManagedLinks(dir: string, vaultDir: string): Promise<number>
 function lintSummary(skill: SkillLintResult): { errors: string[]; warnings: string[] } {
   return {
     errors: skill.issues.filter((issue) => issue.level === 'error').map((issue) => issue.message),
-    warnings: skill.issues.filter((issue) => issue.level === 'warning').map((issue) => issue.message),
+    warnings: skill.issues
+      .filter((issue) => issue.level === 'warning')
+      .map((issue) => issue.message),
+  }
+}
+
+interface CustomizationInfo {
+  customized: boolean
+  updateAvailable: boolean
+  baseline: 'known' | 'unknown'
+}
+
+async function customizationInfo(options: {
+  paths: ApocryphonPaths
+  id: string
+  state: State
+  registry?: RegistrySnapshot | null
+}): Promise<CustomizationInfo> {
+  const { paths, id, state, registry } = options
+  const installed = state.skills[id]
+  const vaultDir = path.join(paths.vault, id)
+  const pristineDir = path.join(paths.pristine, id)
+
+  if (!(await pathExists(pristineDir))) {
+    return {
+      customized: true,
+      updateAvailable: Boolean(registry?.index.skills.some((skill) => skill.id === id)),
+      baseline: 'unknown',
+    }
+  }
+
+  const registryEntry = registry?.index.skills.find((skill) => skill.id === id)
+  if (registry && registryEntry) {
+    try {
+      const plan = await planSkillUpdate({
+        paths,
+        id,
+        // path is validated by the caller that built the snapshot
+        sourceDir: registrySkillDir(
+          { kind: 'local', dir: registry.dir, source: registry.dir },
+          registryEntry,
+        ),
+        installed,
+        registryVersion: registryEntry.version,
+      })
+      return {
+        customized: plan.customized,
+        updateAvailable: plan.updateAvailable,
+        baseline: plan.baseline,
+      }
+    } catch {
+      // Fall through to local-only detection.
+    }
+  }
+
+  if (!(await pathExists(vaultDir))) {
+    return { customized: false, updateAvailable: false, baseline: 'known' }
+  }
+
+  const [base, current] = await Promise.all([
+    buildManifest(pristineDir),
+    buildManifest(vaultDir),
+  ])
+  return {
+    customized: diffManifests(base, current).hasChanges,
+    updateAvailable: false,
+    baseline: 'known',
   }
 }
 
@@ -124,6 +205,7 @@ export async function collectStatus(options: CollectStatusOptions): Promise<Stat
     projects,
     projectRoot = null,
     registryPacks = null,
+    registry = null,
     homeDir = os.homedir(),
   } = options
 
@@ -193,30 +275,45 @@ export async function collectStatus(options: CollectStatusOptions): Promise<Stat
     )
   }
 
-  const rows: SkillStatusRow[] = vaultSkills.map((skill) => {
+  const rows: SkillStatusRow[] = []
+  for (const skill of vaultSkills) {
     const summary = lintSummary(skill)
-    return {
+    const customization = await customizationInfo({
+      paths,
+      id: skill.id,
+      state,
+      registry,
+    })
+    rows.push({
       id: skill.id,
       description: skill.frontmatter?.description ?? null,
       category: skill.frontmatter?.category ?? null,
+      tags: skill.frontmatter?.tags ?? [],
+      version: skill.frontmatter?.version ?? state.skills[skill.id]?.version ?? null,
       installed: true,
       activeGlobal: activeGlobal.has(skill.id),
       activeProject: activeProject.has(skill.id),
       lintErrors: summary.errors.length,
       lintWarnings: summary.warnings.length,
-    }
-  })
+      ...customization,
+    })
+  }
 
   for (const id of missingSkills) {
     rows.push({
       id,
       description: null,
       category: null,
+      tags: [],
+      version: null,
       installed: false,
       activeGlobal: activeGlobal.has(id),
       activeProject: activeProject.has(id),
       lintErrors: 0,
       lintWarnings: 0,
+      customized: false,
+      updateAvailable: false,
+      baseline: 'unknown',
     })
   }
   rows.sort((a, b) => a.id.localeCompare(b.id))
@@ -226,6 +323,13 @@ export async function collectStatus(options: CollectStatusOptions): Promise<Stat
     .filter((item) => item.errors.length > 0 || item.warnings.length > 0)
 
   const exclude = resolvedProject ? await readGitExclude(resolvedProject) : null
+
+  const categoryCounts: Record<string, number> = {}
+  for (const row of rows) {
+    if (!row.installed) continue
+    const key = row.category ?? 'uncategorized'
+    categoryCounts[key] = (categoryCounts[key] ?? 0) + 1
+  }
 
   return {
     home: paths.home,
@@ -239,5 +343,6 @@ export async function collectStatus(options: CollectStatusOptions): Promise<Stat
     integrity,
     lintIssues,
     exclude,
+    categoryCounts,
   }
 }

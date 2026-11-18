@@ -15,6 +15,7 @@ import { ensureDir } from './store.js'
 import { expandActiveSkills } from './packs.js'
 import { coveredBy } from './clients.js'
 import { updateGitExclude, type GitExcludeResult } from './git-exclude.js'
+import { withReporter, type ProgressReporter } from './progress.js'
 
 export interface SyncLink {
   client: ClientId
@@ -53,6 +54,7 @@ export interface SyncOptions {
   registryPacks?: Record<string, Pack> | null
   homeDir?: string
   dryRun?: boolean
+  reporter?: ProgressReporter
 }
 
 async function lstatOrNull(target: string): Promise<import('node:fs').Stats | null> {
@@ -254,6 +256,13 @@ export async function syncSkills(options: SyncOptions): Promise<SyncReport> {
     dryRun,
   }
 
+  const reporter = withReporter(options.reporter)
+  reporter.emit({
+    type: 'start',
+    step: 'relink',
+    message: dryRun ? 'Planning symlink changes' : 'Reconciling symlinks',
+  })
+
   const active = expandActiveSkills(state, entry, registryPacks)
   report.active.global = active.global
   report.active.project = active.project
@@ -340,6 +349,12 @@ export async function syncSkills(options: SyncOptions): Promise<SyncReport> {
       )
     }
   }
+
+  reporter.emit({
+    type: 'succeed',
+    step: 'relink',
+    message: `${report.created.length} created, ${report.removed.length} removed`,
+  })
 
   return report
 }

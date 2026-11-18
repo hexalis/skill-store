@@ -26,6 +26,7 @@ import {
   resolveRegistryLocation,
   type RegistryLocation,
 } from './registry.js'
+import type { ProgressReporter } from './progress.js'
 
 export interface InitializeOptions {
   paths: ApocryphonPaths
@@ -33,6 +34,7 @@ export interface InitializeOptions {
   enabledClients?: ClientId[]
   force?: boolean
   homeDir?: string
+  reporter?: ProgressReporter
 }
 
 export interface InitializeResult {
@@ -67,7 +69,7 @@ export async function initializeHome(options: InitializeOptions): Promise<Initia
   const createdDirs: string[] = []
   const createdFiles: string[] = []
 
-  for (const dir of [paths.home, paths.vault]) {
+  for (const dir of [paths.home, paths.vault, paths.pristine, paths.backups]) {
     if (!(await pathExists(dir))) createdDirs.push(dir)
     await ensureDir(dir)
   }
@@ -114,7 +116,7 @@ export async function initializeHome(options: InitializeOptions): Promise<Initia
       paths,
       options.homeDir ?? os.homedir(),
     )
-    await ensureRegistry(location)
+    await ensureRegistry(location, { reporter: options.reporter })
     const index = await readRegistryIndex(location)
     state = mergeRegistryPacks(state, index)
     await writeState(paths.state, state)

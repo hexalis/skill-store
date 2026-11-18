@@ -43,11 +43,17 @@ const NEGATIVE_TRIGGER_PATTERNS: RegExp[] = [
   /\bsolo cuando\b/i,
 ]
 
-const JUNK_NAMES = new Set(['.git', 'node_modules', 'dist', '.DS_Store', '.turbo', '.next'])
-
 export interface SkillLintOptions {
   /** Maximum recommended body length in lines. Default: 150. */
   maxBodyLines?: number
+  /** Treat a missing category as an error (registry strict mode). */
+  requireCategory?: boolean
+  /** Treat missing tags as an error (registry strict mode). */
+  requireTags?: boolean
+  /** Curated tags accepted by the registry taxonomy. */
+  taxonomyTags?: string[]
+  /** Severity for tags outside the taxonomy. Default: warning. */
+  unknownTagLevel?: 'warning' | 'error'
 }
 
 export interface SkillLintResult {
@@ -138,6 +144,7 @@ function pushFrontmatterIssues(
   issues: LintIssue[],
   rawFrontmatter: Record<string, unknown>,
   dirName: string,
+  options: SkillLintOptions,
 ): void {
   const name = rawFrontmatter.name
   if (typeof name !== 'string' || name.trim() === '') {
@@ -231,6 +238,43 @@ function pushFrontmatterIssues(
       file: 'SKILL.md',
     })
   }
+
+  const category = rawFrontmatter.category
+  if (category === undefined || category === null || String(category).trim() === '') {
+    issues.push({
+      level: options.requireCategory ? 'error' : 'warning',
+      code: 'category-missing',
+      message: options.requireCategory
+        ? 'Frontmatter must define a "category" (domain, workflow or meta).'
+        : 'Add a "category" (domain, workflow or meta) to improve discovery.',
+      file: 'SKILL.md',
+    })
+  }
+
+  const tags = rawFrontmatter.tags
+  const tagList = Array.isArray(tags) ? tags.filter((tag) => typeof tag === 'string') : []
+  if (tagList.length === 0) {
+    issues.push({
+      level: options.requireTags ? 'error' : 'warning',
+      code: 'tags-missing',
+      message: options.requireTags
+        ? 'Frontmatter must define at least one "tags" entry.'
+        : 'Add at least one "tags" entry to improve discovery.',
+      file: 'SKILL.md',
+    })
+  } else if (options.taxonomyTags && options.taxonomyTags.length > 0) {
+    const allowed = new Set(options.taxonomyTags)
+    for (const tag of tagList) {
+      if (!allowed.has(tag)) {
+        issues.push({
+          level: options.unknownTagLevel ?? 'warning',
+          code: 'tag-unknown',
+          message: `Tag "${tag}" is not part of the registry taxonomy (${[...allowed].join(', ')}).`,
+          file: 'SKILL.md',
+        })
+      }
+    }
+  }
 }
 
 /**
@@ -318,7 +362,7 @@ export async function lintSkillDir(
       })
     }
 
-    pushFrontmatterIssues(issues, rawFrontmatter, dirName)
+    pushFrontmatterIssues(issues, rawFrontmatter, dirName, options)
   }
 
   const trimmedBody = body.trim()
@@ -434,4 +478,3 @@ export async function verifySkillIntegrity(
   }
 }
 
-export { JUNK_NAMES }
