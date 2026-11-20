@@ -1,13 +1,13 @@
-# @apocryphon/core
+# @hexalis/skill-store-core
 
-Shared engine for Apocryphon. It contains no terminal or UI dependencies, so it
+Shared engine for Skill Store. It contains no terminal or UI dependencies, so it
 can power the CLI today and the visual store later.
 
 ## Modules
 
 | Module | Responsibility |
 | ------ | -------------- |
-| `paths.ts` | `~/.apocryphon` layout (vault, pristine, backups) and project lookup (`APOCRYPHON_HOME` override). |
+| `paths.ts` | `~/.skill-store` layout (vault, pristine, backups) and project lookup (`SKILL_STORE_HOME` override). |
 | `schemas.ts` | Zod contracts for `config.json`, `state.json`, `projects.json`, `registry.json` and `SKILL.md` frontmatter. |
 | `store.ts` | Atomic JSON reads/writes with schema validation. |
 | `skill-files.ts` | File manifests, SHA-256 fingerprints, modes and atomic directory copies. |
@@ -37,7 +37,7 @@ import {
   syncSkills,
   readConfig,
   readState,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 
 const paths = resolvePaths()
 const config = await readConfig(paths.config)

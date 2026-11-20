@@ -3,7 +3,7 @@ import type {
   ContextBudget,
   LintIssue,
   SyncReport,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 
 export function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2))

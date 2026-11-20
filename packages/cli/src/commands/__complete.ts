@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { CLIENT_IDS, listVaultSkillIds } from '@apocryphon/core'
+import { CLIENT_IDS, listVaultSkillIds } from '@hexalis/skill-store-core'
 import { loadContext, type CliContext } from '../lib/context.js'
 import { SHELLS } from '../lib/completions.js'
 

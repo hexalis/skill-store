@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { Command } from 'commander'
-import { adoptBaseline, pathExists } from '@apocryphon/core'
+import { adoptBaseline, pathExists } from '@hexalis/skill-store-core'
 import { loadContext, saveState } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'

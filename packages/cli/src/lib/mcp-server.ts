@@ -3,7 +3,7 @@ import {
   collectStatus,
   listVaultSkills,
   searchRegistry,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   loadContext,
   syncContext,
@@ -81,14 +81,14 @@ export async function startMcpServer(): Promise<void> {
   }
 
   const server = new mcpModule.McpServer({
-    name: 'apocryphon',
+    name: 'skill-store',
     version: readVersion(),
   })
 
   server.registerTool(
-    'apocryphon_status',
+    'skill_store_status',
     {
-      title: 'Apocryphon status',
+      title: 'Skill Store status',
       description:
         'Return active skills, context budget, client links and project registration for the current project.',
       inputSchema: {
@@ -105,11 +105,11 @@ export async function startMcpServer(): Promise<void> {
   )
 
   server.registerTool(
-    'apocryphon_list_skills',
+    'skill_store_list_skills',
     {
       title: 'List installed skills',
       description:
-        'List the skills installed in the Apocryphon vault with their category, active scopes and lint status.',
+        'List the skills installed in the Skill Store vault with their category, active scopes and lint status.',
       inputSchema: {
         project: z.string().optional().describe('Project directory; defaults to the server cwd'),
       },
@@ -125,11 +125,11 @@ export async function startMcpServer(): Promise<void> {
   )
 
   server.registerTool(
-    'apocryphon_search',
+    'skill_store_search',
     {
       title: 'Search skills',
       description:
-        'Search the configured Apocryphon registry (or the vault when no registry is configured).',
+        'Search the configured Skill Store registry (or the vault when no registry is configured).',
       inputSchema: {
         query: z.string().describe('Text to match against ids, descriptions and tags'),
         limit: z.number().int().positive().max(100).optional(),
@@ -165,7 +165,7 @@ export async function startMcpServer(): Promise<void> {
   )
 
   server.registerTool(
-    'apocryphon_enable',
+    'skill_store_enable',
     {
       title: 'Enable skills or packs',
       description:
@@ -197,7 +197,7 @@ export async function startMcpServer(): Promise<void> {
   )
 
   server.registerTool(
-    'apocryphon_disable',
+    'skill_store_disable',
     {
       title: 'Disable skills or packs',
       description:
@@ -229,7 +229,7 @@ export async function startMcpServer(): Promise<void> {
   )
 
   server.registerTool(
-    'apocryphon_sync',
+    'skill_store_sync',
     {
       title: 'Sync client links',
       description:

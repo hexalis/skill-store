@@ -5,7 +5,7 @@ import {
   type FileResolution,
   type SkillUpdatePlan,
   type UpdateResolution,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { c } from './colors.js'
 import type { Ui } from './ui.js'
 
@@ -52,7 +52,7 @@ export function printPlan(ui: Ui, plan: SkillUpdatePlan): void {
   if (plan.overlap.length > 0) {
     ui.info(`  ${c.dim('Changed on both sides:')} ${plan.overlap.join(', ')}`)
   }
-  ui.info(`  ${c.dim(`Inspect full diffs with: apocryphon diff ${plan.id}`)}`)
+  ui.info(`  ${c.dim(`Inspect full diffs with: skill-store diff ${plan.id}`)}`)
 }
 
 async function askPerFile(plan: SkillUpdatePlan): Promise<FileChoices | null> {
@@ -98,7 +98,7 @@ export async function resolveUpdate(
         `  --force    registry wins (a backup is created)`,
         `  --keep     keep your version and skip this update`,
         `  --merge    three-way merge`,
-        `Or run \`apocryphon diff ${plan.id}\` to inspect the changes first.`,
+        `Or run \`skill-store diff ${plan.id}\` to inspect the changes first.`,
       ].join('\n'),
     )
   }

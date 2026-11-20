@@ -1,5 +1,5 @@
 {
-  "name": "apocryphon-fixtures",
+  "name": "skill-store-fixtures",
   "version": 1,
   "taxonomy": {
     "categories": ["domain", "workflow", "meta"],
@@ -11,7 +11,7 @@
   },
   "packs": {
     "fixtures": {
-      "description": "Minimal skills used by the Apocryphon test suite and local demos.",
+      "description": "Minimal skills used by the Skill Store test suite and local demos.",
       "skills": ["fixture-planning", "fixture-review"]
     }
   },

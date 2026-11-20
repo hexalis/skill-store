@@ -4,7 +4,7 @@ import {
   listVaultSkills,
   type RegistrySkillEntry,
   type SkillLintResult,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, tryLoadRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { requireInteractive, runSafely } from '../lib/run.js'
@@ -53,7 +53,7 @@ export function findCommand(): Command {
 
   return command.action(async (query: string | undefined, options: FindOptions) => {
     await runSafely(async () => {
-      requireInteractive('apocryphon find')
+      requireInteractive('skill-store find')
       const ui = uiFromArgv()
       const ctx = await loadContext({ project: options.project })
       const registry = await tryLoadRegistry(ctx)

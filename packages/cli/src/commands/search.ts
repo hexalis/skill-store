@@ -6,7 +6,7 @@ import {
   searchRegistry,
   type RegistrySkillEntry,
   type SkillLintResult,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, tryLoadRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
@@ -149,7 +149,7 @@ export function searchCommand(): Command {
       if (!registry) {
         ui.info(
           pc.dim(
-            '\nOnly installed skills are searchable. Configure a registry with `apocryphon init --registry <source>`.',
+            '\nOnly installed skills are searchable. Configure a registry with `skill-store init --registry <source>`.',
           ),
         )
       }

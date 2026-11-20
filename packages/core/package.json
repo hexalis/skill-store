@@ -1,11 +1,17 @@
 {
-  "name": "@apocryphon/core",
-  "version": "0.2.0",
-  "description": "Core engine for Apocryphon: skill vault, linter, sync engine and registry client.",
+  "name": "@hexalis/skill-store-core",
+  "version": "0.0.0",
+  "description": "Core engine for Skill Store: skill vault, linter, sync engine and registry client.",
   "type": "module",
   "license": "MIT",
+  "author": "Hexalis",
+  "contributors": [
+    {
+      "name": "Marlon Baltodano"
+    }
+  ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,7 +30,8 @@
     "access": "public"
   },
   "keywords": [
-    "apocryphon",
+    "hexalis",
+    "skill-store",
     "agent-skills",
     "claude-code",
     "cursor",
@@ -41,11 +48,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marlonbaltodano11/apocryphon.git",
+    "url": "git+https://github.com/hexalis/skill-store.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/marlonbaltodano11/apocryphon/tree/main/packages/core#readme",
+  "homepage": "https://github.com/hexalis/skill-store/tree/main/packages/core#readme",
   "bugs": {
-    "url": "https://github.com/marlonbaltodano11/apocryphon/issues"
+    "url": "https://github.com/hexalis/skill-store/issues"
   }
 }

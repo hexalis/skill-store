@@ -10,7 +10,7 @@ tags: [planning, fixtures]
 
 # Fixture planning
 
-This skill exists only to exercise Apocryphon's install and sync flows.
+This skill exists only to exercise Skill Store's install and sync flows.
 
 ## Verification
 

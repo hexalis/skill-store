@@ -8,7 +8,7 @@ import {
   recordSkillState,
   restoreBackup,
   pathExists,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, saveState, syncContext } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
@@ -54,7 +54,7 @@ export function backupsCommand(): Command {
       .command('restore')
     .description('Restore a backup into the vault (defaults to the newest one)')
     .argument('<id>', 'Skill id')
-    .argument('[timestamp]', 'Backup timestamp (see `apocryphon backups list`)')
+    .argument('[timestamp]', 'Backup timestamp (see `skill-store backups list`)')
     .action(async (id: string, timestamp?: string) => {
       await runSafely(async () => {
         const ui = uiFromArgv()

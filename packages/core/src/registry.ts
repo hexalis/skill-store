@@ -8,7 +8,7 @@ import {
   type RegistrySkillEntry,
   type State,
 } from './schemas.js'
-import type { ApocryphonPaths } from './paths.js'
+import type { SkillStorePaths } from './paths.js'
 import { expandHome } from './paths.js'
 import { registryCacheDir } from './registry-config.js'
 import { ensureDir, formatZodError, nowIso, pathExists, readRawJson } from './store.js'
@@ -34,7 +34,7 @@ export function isGitSource(source: string): boolean {
 
 export function resolveRegistryLocation(
   source: string,
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   homeDir: string = os.homedir(),
   ref?: string,
 ): RegistryLocation {
@@ -72,7 +72,7 @@ export interface EnsureRegistryOptions {
  * Make the registry available locally.
  *
  * - Git sources are cloned (shallow) into a per-source cache under
- *   `~/.apocryphon/registries/<hash>/` and updated there.
+ *   `~/.skill-store/registries/<hash>/` and updated there.
  * - Local paths are used in place, which keeps development and tests simple.
  */
 export async function ensureRegistry(
@@ -199,7 +199,7 @@ export async function assertRegistryLayout(
 }
 
 export interface PrepareRegistryOptions {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   source: string
   ref?: string
   homeDir?: string
@@ -232,7 +232,7 @@ export async function prepareRegistrySource(
 export interface InstallOptions {
   location: RegistryLocation
   entry: RegistrySkillEntry
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   state: State
   force?: boolean
   reporter?: ProgressReporter
@@ -261,7 +261,7 @@ export async function installSkillFromRegistry(
 
   if (await pathExists(destination)) {
     throw new Error(
-      `Skill "${entry.id}" is already installed. Use \`apocryphon sync\`, \`apocryphon diff ${entry.id}\` or pass a resolution flag to update it.`,
+      `Skill "${entry.id}" is already installed. Use \`skill-store sync\`, \`skill-store diff ${entry.id}\` or pass a resolution flag to update it.`,
     )
   }
 
@@ -313,7 +313,7 @@ export interface PrepareUpdatesResult {
 export async function prepareInstalledUpdates(options: {
   location: RegistryLocation
   index: RegistryIndex
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   state: State
   reporter?: ProgressReporter
 }): Promise<PrepareUpdatesResult> {

@@ -12,7 +12,7 @@ import {
   parseClientList,
   resolvePaths,
   type ClientId,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { runSafely, isInteractive } from '../lib/run.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { bullet, heading, kv } from '../lib/output.js'
@@ -21,7 +21,7 @@ async function chooseClients(
   detected: Record<ClientId, boolean>,
 ): Promise<ClientId[] | null> {
   const selection = await p.multiselect<ClientId>({
-    message: 'Which clients should Apocryphon manage?',
+    message: 'Which clients should Skill Store manage?',
     options: CLIENT_IDS.map((id) => ({
       value: id,
       label: CLIENT_LABELS[id],
@@ -37,9 +37,9 @@ async function chooseClients(
 export function initCommand(): Command {
   const command = new Command('init')
     .description(
-      'Create ~/.apocryphon, configure clients and optionally connect a skill registry',
+      'Create ~/.skill-store, configure clients and optionally connect a skill registry',
     )
-    .option('-r, --registry <source>', 'Git URL or local path of the skill registry (defaults to the official catalog)')
+    .option('-r, --registry <source>', 'Git URL or local path of the skill registry (defaults to the Hexalis registry)')
     .option('--ref <ref>', 'Branch, tag or commit to pin (Git sources only)')
     .option('--skip-registry', 'Do not fetch the registry during init')
     .option(
@@ -94,7 +94,7 @@ export function initCommand(): Command {
             reporter: ui.reporter(),
           })
 
-          heading('Apocryphon initialized')
+          heading('Skill Store initialized')
           kv('Home', paths.home)
           kv('Vault', paths.vault)
           kv(
@@ -136,10 +136,10 @@ export function initCommand(): Command {
           }
 
           heading('Next steps')
-          bullet('apocryphon search <query>     # explore the catalog')
-          bullet('apocryphon install <skill>     # copy a skill into the vault')
-          bullet('apocryphon use                # pick skills for this project (TUI)')
-          bullet('apocryphon status             # clients, links and context budget')
+          bullet('skill-store search <query>     # explore the catalog')
+          bullet('skill-store install <skill>     # copy a skill into the vault')
+          bullet('skill-store use                # pick skills for this project (TUI)')
+          bullet('skill-store status             # clients, links and context budget')
         })
       },
     )

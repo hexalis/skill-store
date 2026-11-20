@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import pc from 'picocolors'
-import { collectStatus, CLIENT_LABELS } from '@apocryphon/core'
+import { collectStatus, CLIENT_LABELS } from '@hexalis/skill-store-core'
 import { loadContext, tryLoadRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
@@ -39,7 +39,7 @@ export function statusCommand(): Command {
         return
       }
 
-      ui.info(`\n${pc.bold('Apocryphon')} ${pc.dim(status.home)}`)
+      ui.info(`\n${pc.bold('Skill Store')} ${pc.dim(status.home)}`)
       ui.info(
         `${pc.dim('Registry'.padEnd(14))}${status.registrySource}${status.registryIsDefault ? pc.green(' (default)') : ''}`,
       )
@@ -106,7 +106,7 @@ export function statusCommand(): Command {
       }
       if (unknownBaseline.length > 0) {
         ui.info(
-          `  ${pc.yellow('Baseline unknown:')} ${unknownBaseline.map((row) => row.id).join(', ')} ${pc.dim('(run `apocryphon adopt <id>`)')}`,
+          `  ${pc.yellow('Baseline unknown:')} ${unknownBaseline.map((row) => row.id).join(', ')} ${pc.dim('(run `skill-store adopt <id>`)')}`,
         )
       }
 
@@ -142,7 +142,7 @@ export function statusCommand(): Command {
       }
       if (unrecorded.length > 0) {
         ui.info(
-          `  ${pc.dim(`Unrecorded scripts (run \`apocryphon sync\`): ${unrecorded.map((item) => item.id).join(', ')}`)}`,
+          `  ${pc.dim(`Unrecorded scripts (run \`skill-store sync\`): ${unrecorded.map((item) => item.id).join(', ')}`)}`,
         )
       }
       if (modified.length === 0 && unrecorded.length === 0) {

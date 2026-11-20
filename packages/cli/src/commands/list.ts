@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import pc from 'picocolors'
-import { collectStatus } from '@apocryphon/core'
+import { collectStatus } from '@hexalis/skill-store-core'
 import { loadContext, tryLoadRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'

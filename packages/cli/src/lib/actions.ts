@@ -2,7 +2,7 @@ import {
   listVaultSkillIds,
   type ProjectEntry,
   type SyncReport,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   activePacks,
   availablePacks,
@@ -63,7 +63,7 @@ export async function toggleItems(
 
   if (unknown.length > 0) {
     throw new Error(
-      `Unknown skill or pack: ${unknown.join(', ')}. Run \`apocryphon list\` (installed) or \`apocryphon search <query>\` (catalog).`,
+      `Unknown skill or pack: ${unknown.join(', ')}. Run \`skill-store list\` (installed) or \`skill-store search <query>\` (catalog).`,
     )
   }
 

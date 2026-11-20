@@ -9,7 +9,7 @@ import {
   type ProjectEntry,
   type State,
 } from './schemas.js'
-import type { ApocryphonPaths } from './paths.js'
+import type { SkillStorePaths } from './paths.js'
 import { expandHome } from './paths.js'
 import { ensureDir } from './store.js'
 import { expandActiveSkills } from './packs.js'
@@ -46,7 +46,7 @@ export interface SyncReport {
 }
 
 export interface SyncOptions {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   config: Config
   state: State
   projectRoot?: string | null
@@ -113,7 +113,7 @@ interface DirSyncContext {
 /**
  * Reconcile the managed symlinks of a single target directory.
  *
- * Only symlinks that resolve inside the Apocryphon vault are ever removed.
+ * Only symlinks that resolve inside the Skill Store vault are ever removed.
  * Real files or directories are never destroyed: they are reported as skipped.
  */
 async function syncManagedDir(
@@ -181,7 +181,7 @@ async function syncManagedDir(
       if (!managed) {
         ctx.report.skipped.push({
           path: linkPath,
-          reason: 'Existing symlink is not managed by Apocryphon (left untouched).',
+          reason: 'Existing symlink is not managed by Skill Store (left untouched).',
         })
         continue
       }
@@ -292,7 +292,7 @@ export async function syncSkills(options: SyncOptions): Promise<SyncReport> {
 
   if (report.active.missingSkills.length > 0) {
     report.warnings.push(
-      `Active skills not installed in the vault: ${[...new Set(report.active.missingSkills)].join(', ')}. Run \`apocryphon install <id>\`.`,
+      `Active skills not installed in the vault: ${[...new Set(report.active.missingSkills)].join(', ')}. Run \`skill-store install <id>\`.`,
     )
   }
 

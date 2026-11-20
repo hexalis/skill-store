@@ -1,6 +1,6 @@
 # CLI UX conventions
 
-This document is the contract for Apocryphon's interactive behavior. Every
+This document is the contract for Skill Store's interactive behavior. Every
 command must follow it.
 
 ## Global flags
@@ -26,8 +26,8 @@ command must follow it.
 - Interactive prompts run only when both stdin and stdout are TTYs.
 - Without a TTY, a command that needs input fails with an actionable error that
   names the non-interactive alternative (for example
-  `apocryphon enable <skills...>` or `--yes`).
-- `apocryphon` with no arguments and no TTY prints the static help.
+  `skill-store enable <skills...>` or `--yes`).
+- `skill-store` with no arguments and no TTY prints the static help.
 
 ## Cancellation
 

@@ -11,7 +11,7 @@ import {
   type ProjectEntry,
   type SkillLintResult,
   type State,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   activePacks,
   activeSkills,
@@ -59,7 +59,7 @@ function budgetFor(
 }
 
 export async function runUse(options: UseOptions): Promise<void> {
-  requireInteractive('apocryphon use')
+  requireInteractive('skill-store use')
   const ui = uiFromArgv()
   const ctx = await loadContext({ project: options.project })
   const global = options.global ?? false
@@ -70,7 +70,7 @@ export async function runUse(options: UseOptions): Promise<void> {
 
   if (allSkills.length === 0) {
     throw new Error(
-      'The vault is empty. Run `apocryphon sync` or `apocryphon install <skill>` first.',
+      'The vault is empty. Run `skill-store sync` or `skill-store install <skill>` first.',
     )
   }
 
@@ -94,7 +94,7 @@ export async function runUse(options: UseOptions): Promise<void> {
   const currentPacks = new Set(activePacks(ctx, global))
 
   p.intro(
-    `${pc.bgCyan(pc.black(' apocryphon '))} ${global ? 'global skills' : `skills for ${ctx.projectRoot}`}`,
+    `${pc.bgCyan(pc.black(' skill-store '))} ${global ? 'global skills' : `skills for ${ctx.projectRoot}`}`,
   )
 
   const availableSkills = new Set(sorted.map((skill) => skill.id))

@@ -15,7 +15,7 @@ import {
   registryPackSet,
   resolveRegistryLocation,
   type RegistryIndex,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   loadContext,
   saveConfig,
@@ -95,7 +95,7 @@ function printRegistryInfo(ui: Ui, info: RegistryInfo): void {
   } else if (info.error) {
     ui.warn(`  Cache exists but the index is invalid: ${info.error}`)
   } else {
-    ui.info(`  ${pc.dim('Run `apocryphon sync` to fetch the catalog.')}`)
+    ui.info(`  ${pc.dim('Run `skill-store sync` to fetch the catalog.')}`)
   }
   if (info.matchesDefault && !info.isDefault) {
     ui.info(`  ${pc.dim('This source matches the built-in default. `registry default` clears the override.')}`)

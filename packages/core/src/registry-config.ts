@@ -1,22 +1,22 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
 import type { Config, RegistryConfig } from './schemas.js'
-import type { ApocryphonPaths } from './paths.js'
+import type { SkillStorePaths } from './paths.js'
 
 /**
- * Official catalog used when the user has not configured an override.
- * HTTPS is the portable default; users can switch to SSH with
- * `apocryphon registry use git@github.com:...`.
+ * Default registry used when the user has not configured an override.
+ * The Hexalis registry is private, so SSH is the default; users can switch to
+ * HTTPS or a local path with `skill-store registry use ...`.
  */
 export const DEFAULT_REGISTRY_SOURCE =
-  'https://github.com/marlonbaltodano11/apocryphon-registry.git'
+  'git@github.com:hexalis/skill-registry.git'
 
 /**
- * Effective default. `APOCRYPHON_DEFAULT_REGISTRY` lets enterprises and tests
- * replace the official source without writing an explicit config override.
+ * Effective default. `SKILL_STORE_DEFAULT_REGISTRY` lets enterprises and tests
+ * replace the default source without writing an explicit config override.
  */
 export function defaultRegistrySource(env: NodeJS.ProcessEnv = process.env): string {
-  return env.APOCRYPHON_DEFAULT_REGISTRY?.trim() || DEFAULT_REGISTRY_SOURCE
+  return env.SKILL_STORE_DEFAULT_REGISTRY?.trim() || DEFAULT_REGISTRY_SOURCE
 }
 
 export function effectiveRegistryConfig(
@@ -38,7 +38,7 @@ export function isDefaultRegistrySource(
  * or tag with the default branch of the same repository.
  */
 export function registryCacheDir(
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   source: string,
   ref?: string,
 ): string {

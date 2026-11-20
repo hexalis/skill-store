@@ -18,13 +18,13 @@ import {
   recordSkillState,
   refreshPristine,
   type SkillLintResult,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, saveState, syncContext } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
 import { resolveUpdate } from '../lib/update-flow.js'
 import { printIssues, printSyncReport } from '../lib/output.js'
-import { expandHome } from '@apocryphon/core'
+import { expandHome } from '@hexalis/skill-store-core'
 
 interface ImportOptions {
   id?: string
@@ -94,7 +94,7 @@ export function importCommand(): Command {
 
       if (isGitSource(source)) {
         sourceKind = 'git'
-        const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-import-'))
+        const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-store-import-'))
         cleanup = temp
         const clone = spawnSync('git', ['clone', '--depth', '1', source, temp], {
           encoding: 'utf8',

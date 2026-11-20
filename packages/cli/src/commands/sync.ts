@@ -6,7 +6,7 @@ import {
   prepareInstalledUpdates,
   type SkillUpdatePlan,
   type UpdateResolution,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   loadContext,
   loadRegistry,

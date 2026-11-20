@@ -21,7 +21,7 @@ export type SkillCategory = z.infer<typeof SkillCategorySchema>
  * Frontmatter contract for a `SKILL.md`.
  *
  * `name` must be portable across clients (Claude Code requires lowercase
- * kebab-case), so Apocryphon enforces it and recommends matching the folder.
+ * kebab-case), so Skill Store enforces it and recommends matching the folder.
  */
 export const SkillFrontmatterSchema = z
   .object({

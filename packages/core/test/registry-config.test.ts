@@ -13,7 +13,7 @@ import { resolvePaths } from '../src/paths.js'
 import { isGitSource, resolveRegistryLocation } from '../src/registry.js'
 
 describe('registry configuration', () => {
-  it('uses the official source when there is no override', () => {
+  it('uses the default source when there is no override', () => {
     assert.equal(defaultRegistrySource({}), DEFAULT_REGISTRY_SOURCE)
     assert.deepEqual(effectiveRegistryConfig({ registry: null }, {}), {
       source: DEFAULT_REGISTRY_SOURCE,
@@ -21,8 +21,8 @@ describe('registry configuration', () => {
     assert.equal(isDefaultRegistrySource(DEFAULT_REGISTRY_SOURCE, {}), true)
   })
 
-  it('honors APOCRYPHON_DEFAULT_REGISTRY', () => {
-    const env = { APOCRYPHON_DEFAULT_REGISTRY: '/tmp/local-registry' }
+  it('honors SKILL_STORE_DEFAULT_REGISTRY', () => {
+    const env = { SKILL_STORE_DEFAULT_REGISTRY: '/tmp/local-registry' }
     assert.equal(defaultRegistrySource(env), '/tmp/local-registry')
     assert.deepEqual(effectiveRegistryConfig({ registry: null }, env), {
       source: '/tmp/local-registry',
@@ -41,7 +41,7 @@ describe('registry configuration', () => {
   })
 
   it('uses a deterministic cache directory per source and ref', () => {
-    const paths = resolvePaths(path.join(os.tmpdir(), 'apocryphon-registry-config'))
+    const paths = resolvePaths(path.join(os.tmpdir(), 'skill-registry-config'))
     const a = registryCacheDir(paths, 'https://example.com/a.git')
     const aAgain = registryCacheDir(paths, 'https://example.com/a.git')
     const b = registryCacheDir(paths, 'https://example.com/b.git')
@@ -62,7 +62,7 @@ describe('registry configuration', () => {
   })
 
   it('places Git sources in the per-source cache and local paths in place', () => {
-    const paths = resolvePaths('/tmp/apocryphon-registry-location')
+    const paths = resolvePaths('/tmp/skill-registry-location')
 
     const git = resolveRegistryLocation('https://example.com/skills.git', paths, '/home/user')
     assert.equal(git.kind, 'git')

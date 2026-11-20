@@ -11,31 +11,32 @@ export function isShell(value: string): value is Shell {
 export function completionScript(shell: Shell): string {
   switch (shell) {
     case 'bash':
-      return `# apocryphon bash completion
-_apocryphon_complete() {
+      return `# skill-store bash completion
+_skill_store_complete() {
   local words=("\${COMP_WORDS[@]:1}")
   local candidates
-  candidates="$(apocryphon __complete words "\${words[@]}" 2>/dev/null)"
+  candidates="$(skill-store __complete words "\${words[@]}" 2>/dev/null)"
   COMPREPLY=($(compgen -W "$candidates" -- "\${COMP_WORDS[COMP_CWORD]}"))
 }
-complete -F _apocryphon_complete apocryphon
+complete -F _skill_store_complete skill-store hss
 `
     case 'zsh':
-      return `#compdef apocryphon
-# apocryphon zsh completion
-_apocryphon() {
+      return `#compdef skill-store hss
+# skill-store zsh completion
+_skill_store() {
   local -a candidates
-  candidates=("\${(@f)$(apocryphon __complete words "\${words[2,-1]}" 2>/dev/null)}")
+  candidates=("\${(@f)$(skill-store __complete words "\${words[2,-1]}" 2>/dev/null)}")
   compadd -- "\${candidates[@]}"
 }
-compdef _apocryphon apocryphon
+compdef _skill_store skill-store hss
 `
     case 'fish':
-      return `# apocryphon fish completion
-function __apocryphon_complete
-  apocryphon __complete words (commandline -opc)[2..-1] 2>/dev/null
+      return `# skill-store fish completion
+function __skill_store_complete
+  skill-store __complete words (commandline -opc)[2..-1] 2>/dev/null
 end
-complete -c apocryphon -f -a '(__apocryphon_complete)'
+complete -c skill-store -f -a '(__skill_store_complete)'
+complete -c hss -f -a '(__skill_store_complete)'
 `
   }
 }
@@ -43,11 +44,11 @@ complete -c apocryphon -f -a '(__apocryphon_complete)'
 export function completionInstallPath(shell: Shell, homeDir = os.homedir()): string {
   switch (shell) {
     case 'bash':
-      return path.join(homeDir, '.local', 'share', 'bash-completion', 'completions', 'apocryphon')
+      return path.join(homeDir, '.local', 'share', 'bash-completion', 'completions', 'skill-store')
     case 'zsh':
-      return path.join(homeDir, '.zsh', 'completions', '_apocryphon')
+      return path.join(homeDir, '.zsh', 'completions', '_skill-store')
     case 'fish':
-      return path.join(homeDir, '.config', 'fish', 'completions', 'apocryphon.fish')
+      return path.join(homeDir, '.config', 'fish', 'completions', 'skill-store.fish')
   }
 }
 

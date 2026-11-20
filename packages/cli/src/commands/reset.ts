@@ -6,7 +6,7 @@ import {
   recordSkillState,
   restorePristine,
   backupSkill,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, saveState, syncContext } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
@@ -31,7 +31,7 @@ export function resetCommand(): Command {
       }
       if (!(await pathExists(pristineDir))) {
         throw new Error(
-          `Skill "${id}" has no pristine baseline. Run \`apocryphon adopt ${id}\` instead.`,
+          `Skill "${id}" has no pristine baseline. Run \`skill-store adopt ${id}\` instead.`,
         )
       }
 

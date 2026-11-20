@@ -1,5 +1,5 @@
 import * as p from '@clack/prompts'
-import type { ProgressEvent, ProgressReporter } from '@apocryphon/core'
+import type { ProgressEvent, ProgressReporter } from '@hexalis/skill-store-core'
 import { c } from './colors.js'
 import { isInteractive } from './run.js'
 

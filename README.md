@@ -1,32 +1,32 @@
 <div align="center">
 
-# Apocryphon
+# Skill Store
 
 **A local skill store for coding agents.**
 
 Install, validate and activate Agent Skills for **Claude Code**, **Cursor** and
 **OpenCode** — globally or per project, without polluting your repositories.
 
-[![CI](https://github.com/marlonbaltodano11/apocryphon/actions/workflows/ci.yml/badge.svg)](https://github.com/marlonbaltodano11/apocryphon/actions/workflows/ci.yml)
-[![npm @apocryphon/cli](https://img.shields.io/npm/v/@apocryphon/cli?label=%40apocryphon%2Fcli)](https://www.npmjs.com/package/@apocryphon/cli)
-[![npm @apocryphon/core](https://img.shields.io/npm/v/@apocryphon/core?label=%40apocryphon%2Fcore)](https://www.npmjs.com/package/@apocryphon/core)
+[![CI](https://github.com/hexalis/skill-store/actions/workflows/ci.yml/badge.svg)](https://github.com/hexalis/skill-store/actions/workflows/ci.yml)
+[![npm @hexalis/skill-store-cli](https://img.shields.io/npm/v/@hexalis/skill-store-cli?label=%40hexalis%2Fskill-store-cli)](https://www.npmjs.com/package/@hexalis/skill-store-cli)
+[![npm @hexalis/skill-store-core](https://img.shields.io/npm/v/@hexalis/skill-store-core?label=%40hexalis%2Fskill-store-core)](https://www.npmjs.com/package/@hexalis/skill-store-core)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [Safe updates](#updating-skills-safely) · [Commands](#commands) · [Registry](https://github.com/marlonbaltodano11/apocryphon-registry) · [Docs](docs/cli-ux.md)
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Safe updates](#updating-skills-safely) · [Commands](#commands) · [Registry](#registry-source) · [Docs](docs/cli-ux.md)
 
 </div>
 
 ---
 
-Apocryphon is built for the real world: sometimes you **cannot** run a custom
+Skill Store is built for the real world: sometimes you **cannot** run a custom
 orchestration harness because of organization policies, and you have to work
-inside the official IDEs and CLIs. Instead of fighting that, Apocryphon guides
+inside the official IDEs and CLIs. Instead of fighting that, Skill Store guides
 the agents from the inside with high-quality skill descriptions, deterministic
 verification scripts and a careful update flow that never discards your edits
 silently.
 
-## Why Apocryphon
+## Why Skill Store
 
 - **Global and per-project activation.** Symlinks into each client's native
   skill directory, with `<project>/.git/info/exclude` handling so `git status`
@@ -35,7 +35,7 @@ silently.
   categories and curated tags.
 - **Safe updates.** Per-file hashes, pristine baselines, diffs, three-way merges,
   `--force`/`--keep` and automatic backups (5 per skill).
-- **Local skills.** Scaffold with `apocryphon new`, import with `apocryphon import`.
+- **Local skills.** Scaffold with `skill-store new`, import with `skill-store import`.
 - **Lint as a gate.** Portable names, explicit triggers, categories/tags, body
   size, references and script fingerprints.
 - **Scriptable.** `--json` on every read command, shell completions for bash,
@@ -45,44 +45,47 @@ silently.
 ## Install
 
 ```bash
-npm install -g @apocryphon/cli
+npm install -g @hexalis/skill-store-cli
 # or run on demand
-npx @apocryphon/cli --help
+npx --package @hexalis/skill-store-cli skill-store --help
 ```
 
-Requires **Node.js >= 20**.
+The package installs two equivalent commands: **`skill-store`** and its short
+alias **`hss`**.
+
+Requires **Node.js >= 22**.
 
 ## Quick start
 
 ```bash
-# 1. Create ~/.apocryphon (connects the official catalog by default)
-apocryphon init
+# 1. Create ~/.skill-store (connects the Hexalis registry by default)
+skill-store init
 
-# Optional: switch to a fork, a local catalog or a private Git repo
-apocryphon registry use git@ssh.dev.azure.com:v3/org/project/repo
-apocryphon registry show
-apocryphon registry default        # back to the official catalog
+# Optional: switch to a fork, a local catalog or another Git repo
+skill-store registry use git@ssh.dev.azure.com:v3/org/project/repo
+skill-store registry show
+skill-store registry default        # back to the Hexalis registry
 
 # 2. Explore
-apocryphon categories
-apocryphon search commit
-apocryphon find                  # fuzzy picker: preview + actions
+skill-store categories
+skill-store search commit
+skill-store find                  # fuzzy picker: preview + actions
 
 # 3. Install and activate
-apocryphon install workflow-atomic-commits
-apocryphon enable --global workflow-atomic-commits
-cd ~/work/my-project && apocryphon use      # interactive picker
+skill-store install skill-router
+skill-store enable --global skill-router
+cd ~/work/my-project && skill-store use      # interactive picker
 
 # 4. Keep things healthy
-apocryphon status                # clients, budget, customizations, updates
-apocryphon sync --dry-run        # preview updates and link changes
-apocryphon sync                  # merge/apply with explicit decisions
+skill-store status                # clients, budget, customizations, updates
+skill-store sync --dry-run        # preview updates and link changes
+skill-store sync                  # merge/apply with explicit decisions
 ```
 
 ## How it works
 
 ```text
-        registry (Git)                 ~/.apocryphon
+        registry (Git)                 ~/.skill-store
    ┌────────────────────┐        ┌──────────────────────┐
    │ registry.json      │        │ vault/<id>/          │──┐
    │ skills/<id>/       │──install──▶ pristine/<id>/     │  │ symlinks
@@ -101,23 +104,23 @@ apocryphon sync                  # merge/apply with explicit decisions
 - **Global skills** go to each enabled client's global directory.
 - **Project skills** go to `<project>/<client>/skills` and are added to
   `<project>/.git/info/exclude`; the shared `.gitignore` is never modified.
-- When Claude Code and OpenCode are both enabled, Apocryphon skips the duplicate
+- When Claude Code and OpenCode are both enabled, Skill Store skips the duplicate
   OpenCode copy (OpenCode already scans `~/.claude/skills`).
-- Only symlinks managed by Apocryphon are removed. Real files are never deleted.
+- Only symlinks managed by Skill Store are removed. Real files are never deleted.
 
 ## Updating skills safely
 
-Edit anything inside `~/.apocryphon/vault/<id>/`. Apocryphon records file hashes
+Edit anything inside `~/.skill-store/vault/<id>/`. Skill Store records file hashes
 and modes, so it can tell your changes apart from registry changes:
 
 ```bash
-apocryphon diff workflow-atomic-commits   # local vs pristine and registry changes
-apocryphon sync --dry-run                 # plan without touching disk
-apocryphon sync --merge                   # three-way merge
-apocryphon sync --keep                    # keep yours, skip the update
-apocryphon sync --force                   # registry wins (backup first)
-apocryphon reset <id>                     # discard local changes
-apocryphon backups list <id>              # snapshots taken before overwrites
+skill-store diff skill-router   # local vs pristine and registry changes
+skill-store sync --dry-run                 # plan without touching disk
+skill-store sync --merge                   # three-way merge
+skill-store sync --keep                    # keep yours, skip the update
+skill-store sync --force                   # registry wins (backup first)
+skill-store reset <id>                     # discard local changes
+skill-store backups list <id>              # snapshots taken before overwrites
 ```
 
 | Situation | Default behavior |
@@ -128,64 +131,65 @@ apocryphon backups list <id>              # snapshots taken before overwrites
 | No TTY and no flags | **Abort** and list the flags to choose |
 
 Conflicts keep standard markers (`<<<<<<<`, `=======`, `>>>>>>>`) and the command
-exits `1`. Resolve them in your editor and run `apocryphon sync` again. Full
+exits `1`. Resolve them in your editor and run `skill-store sync` again. Full
 policy: [`docs/skill-updates.md`](docs/skill-updates.md).
 
 ## Registry source
 
-The **official catalog is the default**: `apocryphon init` connects to
-`https://github.com/marlonbaltodano11/apocryphon-registry.git` automatically.
+The **Hexalis registry is the default**: `skill-store init` connects to
+`git@github.com:hexalis/skill-registry.git` automatically. The registry is
+private, so access to the Hexalis organization is required.
 
 You can switch to a local path, a fork, a private GitHub repo or an Azure DevOps
 repository. A single source is active at a time:
 
 ```bash
-apocryphon registry show                 # source, ref, cache and catalog summary
-apocryphon registry use ~/dev/skills     # local directory
-apocryphon registry use git@github.com:me/skills.git
-apocryphon registry use git@ssh.dev.azure.com:v3/org/project/repo
-apocryphon registry use <url> --ref v1.0.0   # pin a branch, tag or commit
-apocryphon registry default              # remove the override
+skill-store registry show                 # source, ref, cache and catalog summary
+skill-store registry use ~/dev/skills     # local directory
+skill-store registry use git@github.com:me/skills.git
+skill-store registry use git@ssh.dev.azure.com:v3/org/project/repo
+skill-store registry use <url> --ref v1.0.0   # pin a branch, tag or commit
+skill-store registry default              # remove the override
 ```
 
 `config.json` keeps `registry: null` for the default, or
 `{ "source": "...", "ref": "..." }` for an override. Local paths are stored as
 absolute paths. Git sources are cloned once into
-`~/.apocryphon/registries/<hash>/`, so switching sources never mixes caches.
+`~/.skill-store/registries/<hash>/`, so switching sources never mixes caches.
 
 Changing the source **does not delete installed skills, local edits, backups or
 project activations**. The new catalog is used for future installs and updates;
 packs that are still active keep their definitions. A registry only needs a
-`registry.json` and its `skills/<id>/SKILL.md` folders; see the
-[registry repository](https://github.com/marlonbaltodano11/apocryphon-registry).
+`registry.json` and the skill directories it lists; see the
+[registry repository](https://github.com/hexalis/skill-registry).
 
-`APOCRYPHON_DEFAULT_REGISTRY` can replace the built-in default (useful for
+`SKILL_STORE_DEFAULT_REGISTRY` can replace the built-in default (useful for
 enterprises and tests). For an offline bootstrap, use
-`apocryphon init --skip-registry`; the next command will fetch the active source.
+`skill-store init --skip-registry`; the next command will fetch the active source.
 
 ## Discovery
 
 ```bash
-apocryphon search prisma            # fuzzy ranking, stable scores
-apocryphon search git --category workflow --tag commits
-apocryphon find                     # type → preview → enable/disable/install
-apocryphon browse                   # category → skill → action
-apocryphon tags                     # tag counts
-apocryphon categories               # category counts
-apocryphon completion --install     # bash, zsh or fish
+skill-store search prisma            # fuzzy ranking, stable scores
+skill-store search git --category workflow --tag commits
+skill-store find                     # type → preview → enable/disable/install
+skill-store browse                   # category → skill → action
+skill-store tags                     # tag counts
+skill-store categories               # category counts
+skill-store completion --install     # bash, zsh or fish
 ```
 
-Running `apocryphon` with no arguments opens an interactive launcher. In the
+Running `skill-store` with no arguments opens an interactive launcher. In the
 fuzzy pickers: **type** to filter, **↑/↓** to move, **Tab** to toggle,
 **Enter** to confirm, **Esc** to cancel. See [`docs/cli-ux.md`](docs/cli-ux.md).
 
 ## Local skills
 
 ```bash
-apocryphon new my-skill --category workflow --tags git,project
-apocryphon new my-skill --references --scripts --enable
-apocryphon import ./path/to/skill
-apocryphon import git@github.com:me/skills.git --id my-skill
+skill-store new my-skill --category workflow --tags git,project
+skill-store new my-skill --references --scripts --enable
+skill-store import ./path/to/skill
+skill-store import git@github.com:me/skills.git --id my-skill
 ```
 
 `new` scaffolds a skill that already passes the linter. `import` validates the
@@ -195,28 +199,28 @@ source and asks for `--trust-scripts` when it contains scripts.
 
 | Command | Description |
 | ------- | ----------- |
-| `apocryphon init` | Create the home, configure clients, connect the default registry. |
-| `apocryphon registry show/use/default` | Inspect, override or reset the active skill source. |
-| `apocryphon clients list/enable/disable` | Manage which clients receive symlinks. |
-| `apocryphon search <query>` | Fuzzy search the catalog (or installed skills). |
-| `apocryphon find [query]` | Fuzzy picker with preview and actions. |
-| `apocryphon browse` | Explore installed skills by category. |
-| `apocryphon tags` / `categories` | Tag and category counts. |
-| `apocryphon install [skills...]` | Install/update skills (`--all`, `--filter`). |
-| `apocryphon list` | Installed skills, scopes and customization state. |
-| `apocryphon enable/disable <items...>` | Toggle skills or packs (`--global`). |
-| `apocryphon pack list/apply/remove` | Manage packs. |
-| `apocryphon use` | Interactive selector for the current project. |
-| `apocryphon sync` | Plan/apply registry updates and reconcile links. |
-| `apocryphon diff <id>` | Show local and registry changes. |
-| `apocryphon reset <id>` / `adopt <id>` | Restore pristine / adopt the vault as baseline. |
-| `apocryphon backups list/restore` | Manage update backups. |
-| `apocryphon new <id>` | Create a local skill. |
-| `apocryphon import <source>` | Import a skill from a path or Git URL. |
-| `apocryphon validate [paths...]` | Lint skills (`--registry`, `--strict`). |
-| `apocryphon status` | Clients, active skills, budget, customization, hygiene. |
-| `apocryphon completion bash\|zsh\|fish` | Print shell completions (`--install` to write them). |
-| `apocryphon mcp` | Optional stdio MCP server (requires the MCP SDK). |
+| `skill-store init` | Create the home, configure clients, connect the default registry. |
+| `skill-store registry show/use/default` | Inspect, override or reset the active skill source. |
+| `skill-store clients list/enable/disable` | Manage which clients receive symlinks. |
+| `skill-store search <query>` | Fuzzy search the catalog (or installed skills). |
+| `skill-store find [query]` | Fuzzy picker with preview and actions. |
+| `skill-store browse` | Explore installed skills by category. |
+| `skill-store tags` / `categories` | Tag and category counts. |
+| `skill-store install [skills...]` | Install/update skills (`--all`, `--filter`). |
+| `skill-store list` | Installed skills, scopes and customization state. |
+| `skill-store enable/disable <items...>` | Toggle skills or packs (`--global`). |
+| `skill-store pack list/apply/remove` | Manage packs. |
+| `skill-store use` | Interactive selector for the current project. |
+| `skill-store sync` | Plan/apply registry updates and reconcile links. |
+| `skill-store diff <id>` | Show local and registry changes. |
+| `skill-store reset <id>` / `adopt <id>` | Restore pristine / adopt the vault as baseline. |
+| `skill-store backups list/restore` | Manage update backups. |
+| `skill-store new <id>` | Create a local skill. |
+| `skill-store import <source>` | Import a skill from a path or Git URL. |
+| `skill-store validate [paths...]` | Lint skills (`--registry`, `--strict`). |
+| `skill-store status` | Clients, active skills, budget, customization, hygiene. |
+| `skill-store completion bash\|zsh\|fish` | Print shell completions (`--install` to write them). |
+| `skill-store mcp` | Optional stdio MCP server (requires the MCP SDK). |
 
 ### Global flags
 
@@ -231,7 +235,7 @@ source and asks for `--trust-scripts` when it contains scripts.
 ## State layout
 
 ```text
-~/.apocryphon/
+~/.skill-store/
 ├── config.json        # clients, registry, budget thresholds
 ├── state.json         # global skills/packs, installed metadata, hashes
 ├── projects.json      # per-project skills/packs
@@ -241,76 +245,75 @@ source and asks for `--trust-scripts` when it contains scripts.
 └── registries/<hash>/ # per-source/per-ref Git clones
 ```
 
-`APOCRYPHON_HOME` overrides the state directory (useful for tests).
+`SKILL_STORE_HOME` overrides the state directory (useful for tests).
 
 ## Repository layout
 
 ```text
 packages/
-├── core/   # @apocryphon/core — vault, linter, sync, registry, diff/merge, status
-└── cli/    # @apocryphon/cli  — the `apocryphon` terminal interface
+├── core/   # @hexalis/skill-store-core — vault, linter, sync, registry, diff/merge, status
+└── cli/    # @hexalis/skill-store-cli  — the `skill-store` terminal interface
 catalog/    # minimal fixture registry used by tests and demos
 docs/       # UX contract and skill update policy
 ```
 
-The official catalog lives in a separate repository:
-**[marlonbaltodano11/apocryphon-registry](https://github.com/marlonbaltodano11/apocryphon-registry)**.
-A future `@apocryphon/ui` package will reuse `@apocryphon/core`.
+The Hexalis catalog lives in the private repository
+**[hexalis/skill-registry](https://github.com/hexalis/skill-registry)**.
+A future `@hexalis/skill-store-ui` package will reuse `@hexalis/skill-store-core`.
 
 ## Development
 
 ```bash
-npm install
-npm run build       # core, then cli
-npm run typecheck
-npm test
+pnpm install
+pnpm build       # core, then cli
+pnpm typecheck
+pnpm test
 ```
 
 Run the CLI from the repo:
 
 ```bash
-APOCRYPHON_HOME=/tmp/apo-demo node packages/cli/dist/cli.mjs init \
+SKILL_STORE_HOME=/tmp/skill-store-demo node packages/cli/dist/cli.mjs init \
   --registry ./catalog --clients claude --yes
 ```
 
 The test suite covers the linter, budget, git exclude block, sync engine, diff
-and merge logic, backups, fuzzy scoring and an end-to-end CLI flow (59 tests).
+and merge logic, backups, fuzzy scoring and an end-to-end CLI flow.
 
 ## Releasing
 
-CI runs typecheck, tests, build and a non-interactive smoke test on Node 20, 22
-and 24. Publishing uses three GitHub Environments; all of them have
-`NPM_PUBLISH=true`, and `NPM_TOKEN` is stored as a **repository** secret so every
-environment can read it.
+CI runs typecheck, tests, build and a non-interactive smoke test on Node 22 and
+24. CI and publishing call the reusable workflows from
+[`hexalis/github-workflows`](https://github.com/hexalis/github-workflows).
+
+Publishing uses the `stable` environment; manual snapshots use `develop` and
+`qa`. Each environment has `NPM_PUBLISH=true`. `NPM_TOKEN` is a **repository or
+organization** secret so the caller workflow can pass it to the reusable
+workflow (environment secrets are not visible to the caller job).
 
 | Environment | Used by | Dist-tag | Purpose |
 | ----------- | ------- | -------- | ------- |
+| `stable` | Release (Changesets) | `latest` | Stable releases |
 | `develop` | Prerelease (manual) | `dev` | Development snapshots |
 | `qa` | Prerelease (manual) | `next` / `beta` | QA snapshots |
-| `production` | Release (tag or manual) | `latest` | Stable releases |
-
-`production` can be protected with required reviewers or a deployment branch
-policy once the release cadence is settled.
 
 ### Stable release
 
-```bash
-npm version minor -w @apocryphon/core --no-git-tag-version
-npm version minor -w @apocryphon/cli  --no-git-tag-version
-git commit -am "chore(release): v0.2.0"
-git tag v0.2.0      # must match @apocryphon/cli's version
-git push --follow-tags
-```
+Stable releases follow the Changesets flow:
 
-`release.yml` runs in the `production` environment, typechecks, tests, builds
-and publishes `@apocryphon/core` first and `@apocryphon/cli` afterwards, skipping
-versions that already exist on npm. Provenance is enabled by default and
-requires a public repository. A manual dispatch can override the dist-tag or run
-a dry run that only produces tarballs.
+1. Add a changeset to the PR:
+   ```bash
+   pnpm changeset
+   git add .changeset
+   git commit -m "chore: add changeset"
+   git push
+   ```
+2. Merge the PR into `main`.
+3. `changesets-release.yml` opens or updates the **Version Packages** PR.
+4. Merge that PR to version both packages and publish them to npm.
 
-When the run was triggered by a tag, the workflow also creates a **GitHub
-Release** for that tag with auto-generated notes and the npm tarballs attached.
-Snapshot runs (`prerelease.yml`) do not create GitHub Releases.
+The initial changeset bumps both packages from `0.0.0` to `0.1.0`. After the
+Version Packages PR is merged, the next `main` run publishes them to npm.
 
 ### Snapshots
 
@@ -320,32 +323,26 @@ gh workflow run prerelease.yml -f environment=develop -f dist-tag=dev
 
 # QA snapshot (dist-tag: next)
 gh workflow run prerelease.yml -f environment=qa -f dist-tag=next
-
-# Dry run (build + pack only, no publish)
-gh workflow run prerelease.yml -f environment=develop -f dist-tag=dev -f dry-run=true
 ```
 
-`prerelease.yml` rewrites both packages to `<base>-<dist-tag>.<run_number>` and
-points the CLI dependency at that core snapshot so the pair is installable:
-
-```bash
-npm install -g @apocryphon/cli@next
-```
-
-> These workflows are self-contained copies adapted from
-> `hexalis/github-workflows`. If you later centralize them, replace the bodies with
-> `uses:` calls once they support npm workspaces.
-
+`changesets-prerelease.yml` builds the packages and publishes the pending
+changesets under the requested dist-tag. The reusable workflows do not expose a
+dry-run mode; CI already runs typecheck, tests and build on every change.
 
 ## Contributing
 
 1. Open an issue describing the skill, bug or UX change.
 2. Keep changes focused and add tests for new behavior.
-3. Run `npm run typecheck && npm test && npm run build`.
+3. Run `pnpm typecheck && pnpm test && pnpm build`.
 4. Use semantic commits (`feat(cli): …`, `fix(core): …`, `docs: …`).
-5. For catalog changes, open a PR in
-   [apocryphon-registry](https://github.com/marlonbaltodano11/apocryphon-registry).
+5. For skill or registry changes, open a PR in the private
+   [skill-registry](https://github.com/hexalis/skill-registry).
+
+## Credits
+
+Skill Store is a fork of [Apocryphon](https://github.com/marlonbaltodano11/apocryphon)
+by Marlon Baltodano, adapted for Hexalis.
 
 ## License
 
-[MIT](LICENSE) © Marlon Baltodano
+[MIT](LICENSE) © 2026 Marlon Baltodano and Hexalis

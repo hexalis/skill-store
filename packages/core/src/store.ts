@@ -91,7 +91,7 @@ export async function readConfig(file: string): Promise<Config> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(
-        `Apocryphon is not initialized (missing ${file}). Run \`apocryphon init\` first.`,
+        `Skill Store is not initialized (missing ${file}). Run \`skill-store init\` first.`,
       )
     }
     throw error

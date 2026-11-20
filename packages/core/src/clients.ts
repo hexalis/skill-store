@@ -20,7 +20,7 @@ export interface ClientDirDefaults {
  * - OpenCode: `~/.config/opencode/skills` and `<project>/.opencode/skills`
  * - Cursor: `~/.cursor/skills` and `<project>/.cursor/skills`
  *
- * All of them are configurable in `~/.apocryphon/config.json`.
+ * All of them are configurable in `~/.skill-store/config.json`.
  */
 export const DEFAULT_CLIENT_DIRS: Record<ClientId, ClientDirDefaults> = {
   claude: { globalDir: '~/.claude/skills', projectDir: '.claude/skills' },
@@ -89,7 +89,7 @@ async function dirExists(target: string): Promise<boolean> {
 /**
  * Best-effort detection of installed clients. Looks at each client's config
  * directory and its CLI binary. False negatives are acceptable: the user can
- * always enable a client explicitly with `apocryphon clients enable`.
+ * always enable a client explicitly with `skill-store clients enable`.
  */
 export async function detectClientPresence(
   homeDir: string = os.homedir(),
@@ -114,7 +114,7 @@ export async function detectClientPresence(
 
 /**
  * Return the enabled client that already exposes its skill directory to
- * `client` (if any), so Apocryphon can avoid duplicate symlinks.
+ * `client` (if any), so Skill Store can avoid duplicate symlinks.
  */
 export function coveredBy(
   client: ClientId,

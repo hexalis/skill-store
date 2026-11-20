@@ -33,7 +33,7 @@ import { c } from './lib/colors.js'
 const program = new Command()
 
 program
-  .name('apocryphon')
+  .name('skill-store')
   .description(
     'Install, validate and activate agent skills for Claude Code, Cursor and OpenCode.',
   )

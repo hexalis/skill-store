@@ -16,7 +16,7 @@ import {
   writeConfig,
   writeProjects,
   writeState,
-  type ApocryphonPaths,
+  type SkillStorePaths,
   type Config,
   type Pack,
   type ProjectEntry,
@@ -26,10 +26,10 @@ import {
   type State,
   type SyncReport,
   type ProgressReporter,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 
 export interface CliContext {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   config: Config
   state: State
   projects: Projects

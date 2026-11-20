@@ -31,7 +31,7 @@ export interface ContextBudget {
 /**
  * Rough token estimate for the text a client keeps in the model's skill list
  * (name + description). Uses the common ~4 characters per token heuristic so
- * Apocryphon does not need to ship a full tokenizer.
+ * Skill Store does not need to ship a full tokenizer.
  */
 export function estimateTokens(text: string): number {
   if (!text) return 0

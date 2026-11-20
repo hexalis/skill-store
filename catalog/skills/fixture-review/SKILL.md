@@ -10,7 +10,7 @@ tags: [review, fixtures]
 
 # Fixture review
 
-This skill exists only to exercise Apocryphon's install and update flows.
+This skill exists only to exercise Skill Store's install and update flows.
 
 ## Verification
 

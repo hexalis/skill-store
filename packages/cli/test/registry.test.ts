@@ -16,8 +16,8 @@ let project: string
 let registryA: string
 let registryB: string
 
-function apocryphonHome(): string {
-  return path.join(userHome, '.apocryphon')
+function skillStoreHome(): string {
+  return path.join(userHome, '.skill-store')
 }
 
 interface RunResult {
@@ -33,8 +33,8 @@ function run(args: string[], options: { cwd?: string } = {}): RunResult {
     env: {
       ...process.env,
       HOME: userHome,
-      APOCRYPHON_HOME: apocryphonHome(),
-      APOCRYPHON_DEFAULT_REGISTRY: registryA,
+      SKILL_STORE_HOME: skillStoreHome(),
+      SKILL_STORE_DEFAULT_REGISTRY: registryA,
       NO_COLOR: '1',
     },
   })
@@ -69,7 +69,7 @@ async function readJson(file: string): Promise<Record<string, unknown>> {
 }
 
 before(async () => {
-  sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-registry-cli-'))
+  sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-registry-cli-'))
   userHome = path.join(sandbox, 'user')
   project = path.join(sandbox, 'project')
   registryA = path.join(sandbox, 'registry-a')
@@ -126,23 +126,23 @@ describe('registry source', () => {
     assert.equal(payload.packs, 1)
     assert.equal(payload.installed, 2)
 
-    const state = await readJson(path.join(apocryphonHome(), 'state.json'))
+    const state = await readJson(path.join(skillStoreHome(), 'state.json'))
     const packs = state.packs as Record<string, unknown>
     assert.ok(packs['pack-b'])
     assert.ok(packs['pack-a'], 'active pack definition is preserved')
     assert.equal(Object.keys(state.skills as Record<string, unknown>).length, 2)
 
-    const config = await readJson(path.join(apocryphonHome(), 'config.json'))
+    const config = await readJson(path.join(skillStoreHome(), 'config.json'))
     assert.deepEqual(config.registry, { source: registryB })
   })
 
   it('does not change the source when the new one is invalid', async () => {
-    const beforeConfig = await readJson(path.join(apocryphonHome(), 'config.json'))
+    const beforeConfig = await readJson(path.join(skillStoreHome(), 'config.json'))
     const result = run(['registry', 'use', path.join(sandbox, 'missing-registry')])
     assert.equal(result.status, 1)
     assert.match(result.stderr, /registry.json|does not exist|not found/i)
 
-    const afterConfig = await readJson(path.join(apocryphonHome(), 'config.json'))
+    const afterConfig = await readJson(path.join(skillStoreHome(), 'config.json'))
     assert.deepEqual(afterConfig.registry, beforeConfig.registry)
 
     const show = JSON.parse(runOk(['registry', 'show', '--json']).stdout) as {
@@ -162,7 +162,7 @@ describe('registry source', () => {
     assert.equal(payload.isDefault, true)
     assert.equal(payload.installed, 2)
 
-    const config = await readJson(path.join(apocryphonHome(), 'config.json'))
+    const config = await readJson(path.join(skillStoreHome(), 'config.json'))
     assert.equal(config.registry, null)
 
     const show = JSON.parse(runOk(['registry', 'show', '--json']).stdout) as {
@@ -183,8 +183,8 @@ describe('registry source', () => {
     const env = {
       ...process.env,
       HOME: otherHome,
-      APOCRYPHON_HOME: path.join(otherHome, '.apocryphon'),
-      APOCRYPHON_DEFAULT_REGISTRY: registryA,
+      SKILL_STORE_HOME: path.join(otherHome, '.skill-store'),
+      SKILL_STORE_DEFAULT_REGISTRY: registryA,
       NO_COLOR: '1',
     }
     const init = spawnSync(process.execPath, ['--import', tsxLoader, cliEntry, 'init', '--clients', 'claude', '--yes'], {
@@ -195,7 +195,7 @@ describe('registry source', () => {
     assert.equal(init.status, 0, init.stderr)
 
     const config = JSON.parse(
-      await fs.readFile(path.join(otherHome, '.apocryphon', 'config.json'), 'utf8'),
+      await fs.readFile(path.join(otherHome, '.skill-store', 'config.json'), 'utf8'),
     ) as { registry: unknown }
     assert.equal(config.registry, null)
 

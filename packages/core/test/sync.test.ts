@@ -47,7 +47,7 @@ after(async () => {
 })
 
 async function setup(options: { clients: Array<'claude' | 'cursor' | 'opencode'> }) {
-  const home = await makeTempDir('apocryphon-sync-home-')
+  const home = await makeTempDir('skill-store-sync-home-')
   const userHome = path.join(home, 'user')
   const project = path.join(home, 'project')
   await fs.mkdir(userHome, { recursive: true })

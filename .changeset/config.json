@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "fixed": [
+    [
+      "@hexalis/skill-store-core",
+      "@hexalis/skill-store-cli"
+    ]
+  ]
+}

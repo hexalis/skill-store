@@ -1,5 +1,5 @@
 import os from 'node:os'
-import type { ApocryphonPaths } from './paths.js'
+import type { SkillStorePaths } from './paths.js'
 import {
   type ClientId,
   type Config,
@@ -28,7 +28,7 @@ import { collectActivePacks, registryPackSet } from './packs.js'
 import type { ProgressReporter } from './progress.js'
 
 export interface InitializeOptions {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   registrySource?: string | null
   registryRef?: string
   enabledClients?: ClientId[]
@@ -64,7 +64,7 @@ export function mergeRegistryPacks(state: State, index: RegistryIndex): State {
 }
 
 /**
- * Create (or repair) the Apocryphon home directory.
+ * Create (or repair) the Skill Store home directory.
  *
  * Existing configuration is preserved unless `force` is set. The active
  * registry is the explicit source, the configured override, or the built-in

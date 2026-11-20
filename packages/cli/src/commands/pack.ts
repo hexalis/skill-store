@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import type { ProjectEntry } from '@apocryphon/core'
+import type { ProjectEntry } from '@hexalis/skill-store-core'
 import {
   activePacks,
   availablePacks,
@@ -52,7 +52,7 @@ export function packCommand(): Command {
 
         if (rows.length === 0) {
           console.log(
-            'No packs known. Configure a registry with `apocryphon init --registry <source>`.',
+            'No packs known. Configure a registry with `skill-store init --registry <source>`.',
           )
           return
         }
@@ -95,7 +95,7 @@ export function packCommand(): Command {
           const unknown = names.filter((name) => !(name in packs))
           if (unknown.length > 0) {
             throw new Error(
-              `Unknown pack(s): ${unknown.join(', ')}. Run \`apocryphon pack list\`.`,
+              `Unknown pack(s): ${unknown.join(', ')}. Run \`skill-store pack list\`.`,
             )
           }
 

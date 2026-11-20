@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
-import { listVaultSkills, type SkillLintResult } from '@apocryphon/core'
+import { listVaultSkills, type SkillLintResult } from '@hexalis/skill-store-core'
 import { loadContext } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { requireInteractive, runSafely } from '../lib/run.js'
@@ -44,7 +44,7 @@ export function browseCommand(): Command {
       }
 
       if (skills.length === 0) {
-        throw new Error('The vault is empty. Run `apocryphon sync` or install some skills.')
+        throw new Error('The vault is empty. Run `skill-store sync` or install some skills.')
       }
 
       if (!ui.interactive) {

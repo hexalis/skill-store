@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -15,37 +15,23 @@ concurrency:
 
 jobs:
   quality:
-    name: Node ${{ matrix.node }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    name: Quality (Node ${{ matrix.node }})
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
-    steps:
-      - uses: actions/checkout@v4
+        node: ["22", "24"]
+    uses: hexalis/github-workflows/.github/workflows/node-ci.yml@main
+    with:
+      package-manager: pnpm
+      node-version: ${{ matrix.node }}
+      typecheck-command: pnpm typecheck
+      test-command: pnpm test
+      build-command: pnpm build
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          cache: npm
-
-      - name: Install
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      - name: Pack (dry run)
-        run: |
-          npm pack -w @apocryphon/core --dry-run
-          npm pack -w @apocryphon/cli --dry-run
+  changeset:
+    name: Changeset
+    if: github.event_name == 'pull_request'
+    uses: hexalis/github-workflows/.github/workflows/changeset-check.yml@main
 
   smoke:
     name: CLI smoke (non-interactive)
@@ -54,18 +40,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
 
       - name: Exercise the CLI without a TTY
         env:
           HOME: ${{ runner.temp }}/home
-          APOCRYPHON_HOME: ${{ runner.temp }}/home/.apocryphon
+          SKILL_STORE_HOME: ${{ runner.temp }}/home/.skill-store
         run: |
           set -euo pipefail
           mkdir -p "$HOME" "$RUNNER_TEMP/project"
@@ -74,6 +65,7 @@ jobs:
 
           CLI="$GITHUB_WORKSPACE/packages/cli/dist/cli.mjs"
 
+          node "$CLI" --version
           node "$CLI" init --registry "$GITHUB_WORKSPACE/catalog" --clients claude --yes
           node "$CLI" install fixture-planning fixture-review
           node "$CLI" enable --global fixture-planning
@@ -84,33 +76,7 @@ jobs:
           node -e "const s = require('./status.json'); if (!s.skills.length) process.exit(1)"
           node "$CLI" list --json > list.json
           node -e "const rows = require('./list.json'); if (rows.length !== 2) process.exit(1)"
-          node "$CLI" completion bash > /dev/null
+          node "$CLI" completion bash > completion.sh
+          grep -q 'skill-store hss' completion.sh
           node "$CLI" __complete words en | grep -q enable
           node "$CLI" validate --registry --strict
-
-  package:
-    name: Package artifacts
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-      - run: npm run build
-
-      - name: Pack tarballs
-        run: |
-          mkdir -p artifacts
-          npm pack -w @apocryphon/core --pack-destination artifacts
-          npm pack -w @apocryphon/cli --pack-destination artifacts
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: npm-tarballs
-          path: artifacts/*.tgz
-          retention-days: 14

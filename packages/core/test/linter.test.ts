@@ -12,7 +12,7 @@ import {
 const tempDirs: string[] = []
 
 async function makeTempDir(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-lint-'))
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-store-lint-'))
   tempDirs.push(dir)
   return dir
 }
@@ -165,6 +165,14 @@ describe('skill linter', () => {
     )
     assert.equal(
       hasExplicitTriggers('Use this skill when the user creates a migration.'),
+      true,
+    )
+    assert.equal(
+      hasExplicitTriggers('Use for Astro implementation and architecture.'),
+      true,
+    )
+    assert.equal(
+      hasExplicitTriggers('Use when planning application kickoff.'),
       true,
     )
     assert.equal(hasExplicitTriggers('General purpose helper for everything.'), false)

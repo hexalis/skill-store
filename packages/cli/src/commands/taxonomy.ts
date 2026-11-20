@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { listVaultSkills } from '@apocryphon/core'
+import { listVaultSkills } from '@hexalis/skill-store-core'
 import { loadContext, tryLoadRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'

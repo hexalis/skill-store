@@ -1,4 +1,4 @@
-import type { SkillLintResult } from '@apocryphon/core'
+import type { SkillLintResult } from '@hexalis/skill-store-core'
 import { fuzzyScore } from './fuzzy.js'
 import { truncate } from './output.js'
 

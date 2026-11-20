@@ -11,7 +11,7 @@ import {
   type RegistryIndex,
   type State,
 } from './schemas.js'
-import { expandHome, findRegisteredProject, normalizeProjectPath, type ApocryphonPaths } from './paths.js'
+import { expandHome, findRegisteredProject, normalizeProjectPath, type SkillStorePaths } from './paths.js'
 import { type SkillLintResult } from './skill-linter.js'
 import { listVaultSkills } from './vault.js'
 import { computeContextBudget, type ContextBudget } from './context-budget.js'
@@ -80,7 +80,7 @@ export interface RegistrySnapshot {
 }
 
 export interface CollectStatusOptions {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   config: Config
   state: State
   projects: Projects
@@ -140,7 +140,7 @@ interface CustomizationInfo {
 }
 
 async function customizationInfo(options: {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   id: string
   state: State
   registry?: RegistrySnapshot | null

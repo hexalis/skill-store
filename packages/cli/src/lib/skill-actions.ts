@@ -3,7 +3,7 @@ import * as p from '@clack/prompts'
 import {
   lintSkillDir,
   pathExists,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { toggleItems } from './actions.js'
 import { printSyncReport } from './output.js'
 import { previewText } from './skill-view.js'

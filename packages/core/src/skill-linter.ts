@@ -21,6 +21,7 @@ const MAX_BODY_LINES = 150
  */
 const TRIGGER_PATTERNS: RegExp[] = [
   /\buse (this|it|the skill|when)\b/i,
+  /\buse (for|at|in|during|before|after)\b/i,
   /\buse it (when|for|before|after)\b/i,
   /\bwhen (the )?(user|you|working|asked|task|editing|writing)\b/i,
   /\bsiempre que\b/i,
@@ -104,7 +105,7 @@ async function walkFiles(dir: string): Promise<string[]> {
     } else if (entry.isFile()) {
       results.push(full)
     }
-    // Symlinks inside scripts/ are intentionally ignored: Apocryphon only
+    // Symlinks inside scripts/ are intentionally ignored: Skill Store only
     // fingerprints regular files it can audit.
   }
 

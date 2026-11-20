@@ -17,6 +17,6 @@ export function isInteractive(): boolean {
 export function requireInteractive(command: string): void {
   if (isInteractive()) return
   throw new Error(
-    `\`${command}\` is interactive and needs a TTY. Use the non-interactive commands instead (for example \`apocryphon enable <skills...>\`).`,
+    `\`${command}\` is interactive and needs a TTY. Use the non-interactive commands instead (for example \`skill-store enable <skills...>\`).`,
   )
 }

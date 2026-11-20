@@ -16,8 +16,8 @@ export default defineConfig({
   treeshake: true,
   banner: { js: '#!/usr/bin/env node' },
   outExtension: () => ({ js: '.mjs' }),
-  external: ['@apocryphon/core', '@modelcontextprotocol/sdk'],
+  external: ['@hexalis/skill-store-core', '@modelcontextprotocol/sdk'],
   define: {
-    __APOCRYPHON_VERSION__: JSON.stringify(pkg.version),
+    __SKILL_STORE_VERSION__: JSON.stringify(pkg.version),
   },
 })

@@ -16,7 +16,7 @@ let project: string
 let registry: string
 
 function home(): string {
-  return path.join(userHome, '.apocryphon')
+  return path.join(userHome, '.skill-store')
 }
 
 interface RunResult {
@@ -29,7 +29,7 @@ function run(args: string[], options: { cwd?: string } = {}): RunResult {
   const result = spawnSync(process.execPath, ['--import', tsxLoader, cliEntry, ...args], {
     cwd: options.cwd ?? project,
     encoding: 'utf8',
-    env: { ...process.env, HOME: userHome, APOCRYPHON_HOME: home(), NO_COLOR: '1' },
+    env: { ...process.env, HOME: userHome, SKILL_STORE_HOME: home(), NO_COLOR: '1' },
   })
   return {
     status: result.status,
@@ -57,7 +57,7 @@ function registrySkill(id: string): string {
 }
 
 before(async () => {
-  sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-updates-cli-'))
+  sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-store-updates-cli-'))
   userHome = path.join(sandbox, 'user')
   project = path.join(sandbox, 'project')
   registry = path.join(sandbox, 'registry')

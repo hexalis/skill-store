@@ -14,23 +14,23 @@ export function expandHome(input: string, homeDir: string = os.homedir()): strin
 }
 
 /**
- * Resolve the Apocryphon home directory.
+ * Resolve the Skill Store home directory.
  *
  * Precedence:
- *   1. `APOCRYPHON_HOME` environment variable (used by tests and power users).
- *   2. `~/.apocryphon`.
+ *   1. `SKILL_STORE_HOME` environment variable (used by tests and power users).
+ *   2. `~/.skill-store`.
  */
-export function resolveApocryphonHome(
+export function resolveSkillStoreHome(
   env: NodeJS.ProcessEnv = process.env,
   homeDir: string = os.homedir(),
 ): string {
-  const override = env.APOCRYPHON_HOME?.trim()
+  const override = env.SKILL_STORE_HOME?.trim()
   if (override) return path.resolve(expandHome(override, homeDir))
-  return path.join(homeDir, '.apocryphon')
+  return path.join(homeDir, '.skill-store')
 }
 
-export interface ApocryphonPaths {
-  /** Root of all Apocryphon state. */
+export interface SkillStorePaths {
+  /** Root of all Skill Store state. */
   home: string
   /** Global configuration file. */
   config: string
@@ -50,7 +50,7 @@ export interface ApocryphonPaths {
   registry: string
 }
 
-export function resolvePaths(home: string = resolveApocryphonHome()): ApocryphonPaths {
+export function resolvePaths(home: string = resolveSkillStoreHome()): SkillStorePaths {
   return {
     home,
     config: path.join(home, 'config.json'),

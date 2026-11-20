@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import type { InstalledSkill, SkillSource, State } from './schemas.js'
-import type { ApocryphonPaths } from './paths.js'
+import type { SkillStorePaths } from './paths.js'
 import {
   buildManifest,
   copyDirAtomic,
@@ -37,7 +37,7 @@ export interface SkillUpdatePlan {
 }
 
 export interface PlanOptions {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   id: string
   sourceDir: string
   installed?: InstalledSkill
@@ -49,14 +49,14 @@ async function readManifest(dir: string): Promise<FileManifest> {
 }
 
 /**
- * Ensure `~/.apocryphon/pristine/<id>` exists.
+ * Ensure `~/.skill-store/pristine/<id>` exists.
  *
  * For legacy installs without a pristine copy, the current vault is adopted as
  * the baseline only when it is still unmodified; otherwise we cannot know what
  * the user changed and the baseline stays unknown.
  */
 export async function ensurePristine(
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   id: string,
 ): Promise<'exists' | 'created' | 'missing'> {
   const pristineDir = path.join(paths.pristine, id)
@@ -70,7 +70,7 @@ export async function ensurePristine(
 }
 
 export async function refreshPristine(
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   id: string,
   sourceDir: string,
 ): Promise<void> {
@@ -144,7 +144,7 @@ export interface BackupInfo {
 }
 
 export async function backupSkill(
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   id: string,
   keep = 5,
 ): Promise<BackupInfo | null> {
@@ -164,7 +164,7 @@ export async function backupSkill(
   return { timestamp: stamp, dir }
 }
 
-export async function listBackups(paths: ApocryphonPaths, id: string): Promise<BackupInfo[]> {
+export async function listBackups(paths: SkillStorePaths, id: string): Promise<BackupInfo[]> {
   let entries: string[]
   try {
     entries = await fs.readdir(path.join(paths.backups, id))
@@ -182,7 +182,7 @@ export async function listBackups(paths: ApocryphonPaths, id: string): Promise<B
 }
 
 export async function restoreBackup(
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   id: string,
   timestamp?: string,
 ): Promise<string> {
@@ -200,7 +200,7 @@ export async function restoreBackup(
 }
 
 /** Restore the pristine (registry) copy, discarding local edits. */
-export async function restorePristine(paths: ApocryphonPaths, id: string): Promise<void> {
+export async function restorePristine(paths: SkillStorePaths, id: string): Promise<void> {
   const pristineDir = path.join(paths.pristine, id)
   if (!(await pathExists(pristineDir))) {
     throw new Error(`No pristine baseline for skill "${id}".`)
@@ -209,7 +209,7 @@ export async function restorePristine(paths: ApocryphonPaths, id: string): Promi
 }
 
 export interface ApplyUpdateOptions {
-  paths: ApocryphonPaths
+  paths: SkillStorePaths
   id: string
   sourceDir: string
   plan: SkillUpdatePlan
@@ -322,11 +322,11 @@ export async function applySkillUpdate(
   } else {
     if (plan.baseline === 'unknown') {
       throw new Error(
-        `Skill "${id}" has no pristine baseline; run \`apocryphon adopt ${id}\` first, or use --force/--keep.`,
+        `Skill "${id}" has no pristine baseline; run \`skill-store adopt ${id}\` first, or use --force/--keep.`,
       )
     }
 
-    const mergeDir = await fs.mkdtemp(path.join(os.tmpdir(), `apocryphon-merge-${id}-`))
+    const mergeDir = await fs.mkdtemp(path.join(os.tmpdir(), `skill-store-merge-${id}-`))
     try {
       const result = await mergeSkillDirs({
         pristineDir: path.join(paths.pristine, id),
@@ -366,7 +366,7 @@ export async function applySkillUpdate(
  * Used for legacy installs whose baseline cannot be reconstructed.
  */
 export async function adoptBaseline(
-  paths: ApocryphonPaths,
+  paths: SkillStorePaths,
   id: string,
   state: State,
 ): Promise<void> {

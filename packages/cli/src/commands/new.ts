@@ -12,7 +12,7 @@ import {
   pathExists,
   recordSkillState,
   type SkillCategory,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   loadContext,
   saveState,
@@ -250,7 +250,7 @@ export function newCommand(): Command {
         ui.success(`Activated ${id}${options.global ? ' globally' : ' in this project'}.`)
       } else {
         ui.info(
-          `Next: \`apocryphon enable ${id}\`, \`apocryphon enable --global ${id}\`, or \`apocryphon use\`.`,
+          `Next: \`skill-store enable ${id}\`, \`skill-store enable --global ${id}\`, or \`skill-store use\`.`,
         )
       }
 

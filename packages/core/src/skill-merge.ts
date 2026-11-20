@@ -115,7 +115,7 @@ export async function mergeSkillDirs(options: MergeOptions): Promise<MergeResult
     deleted: [],
   }
 
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-merge-file-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-store-merge-file-'))
 
   try {
     for (const rel of paths) {

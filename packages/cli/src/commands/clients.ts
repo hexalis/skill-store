@@ -6,7 +6,7 @@ import {
   detectClientPresence,
   isClientId,
   type ClientId,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   loadContext,
   saveConfig,
@@ -49,7 +49,7 @@ async function setEnabled(
 
 export function clientsCommand(): Command {
   const command = new Command('clients').description(
-    'Inspect or enable/disable the coding clients Apocryphon manages',
+    'Inspect or enable/disable the coding clients Skill Store manages',
   )
 
   addGlobalOptions(

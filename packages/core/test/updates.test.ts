@@ -53,7 +53,7 @@ async function writeSkill(dir: string, name: string, body: string): Promise<void
 }
 
 async function setup() {
-  const root = await makeTempDir('apocryphon-updates-')
+  const root = await makeTempDir('skill-store-updates-')
   const paths = resolvePaths(path.join(root, 'state'))
   const homeDir = path.join(root, 'user')
   const initialized = await initializeHome({ paths, enabledClients: ['claude'], homeDir })
@@ -203,7 +203,7 @@ describe('skill updates', () => {
 
 describe('three-way merge', () => {
   it('reports conflicts and preserves markers', async () => {
-    const root = await makeTempDir('apocryphon-merge-')
+    const root = await makeTempDir('skill-store-merge-')
     const base = path.join(root, 'base')
     const ours = path.join(root, 'ours')
     const theirs = path.join(root, 'theirs')
@@ -235,7 +235,7 @@ describe('three-way merge', () => {
   })
 
   it('takes non-conflicting changes from both sides', async () => {
-    const root = await makeTempDir('apocryphon-merge-')
+    const root = await makeTempDir('skill-store-merge-')
     const base = path.join(root, 'base')
     const ours = path.join(root, 'ours')
     const theirs = path.join(root, 'theirs')

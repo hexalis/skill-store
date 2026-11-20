@@ -6,7 +6,7 @@ import {
   lintSkillDir,
   type SkillLintOptions,
   type SkillLintResult,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, requireRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'

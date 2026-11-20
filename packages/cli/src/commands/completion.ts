@@ -42,7 +42,7 @@ export function completionCommand(): Command {
       if (!installMode) {
         if (!shell || !isShell(shell)) {
           throw new Error(
-            `Choose a shell: ${SHELLS.join(', ')}. Example: apocryphon completion bash`,
+            `Choose a shell: ${SHELLS.join(', ')}. Example: skill-store completion bash`,
           )
         }
         console.log(completionScript(shell))

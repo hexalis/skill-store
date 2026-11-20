@@ -67,14 +67,14 @@ function runSelf(args: string[]): void {
 }
 
 /**
- * Interactive launcher shown by `apocryphon` with no arguments in a TTY.
+ * Interactive launcher shown by `skill-store` with no arguments in a TTY.
  * Each action re-executes the CLI with inherited stdio, which keeps prompts and
  * colors working exactly like a direct invocation.
  */
 export async function runLauncher(): Promise<void> {
   if (!isInteractive()) return
 
-  p.intro(`${c.bgCyan(c.black(' apocryphon '))} ${c.dim('skill manager')}`)
+  p.intro(`${c.bgCyan(c.black(' skill-store '))} ${c.dim('skill manager')}`)
 
   for (;;) {
     const action = await p.select<string>({

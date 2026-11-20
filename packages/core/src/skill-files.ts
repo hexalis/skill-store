@@ -47,7 +47,7 @@ async function walk(dir: string, base: string, out: string[]): Promise<void> {
     } else if (entry.isFile()) {
       out.push(rel)
     }
-    // Symlinks are intentionally ignored: Apocryphon only fingerprints regular
+    // Symlinks are intentionally ignored: Skill Store only fingerprints regular
     // files it can audit and copy.
   }
 }

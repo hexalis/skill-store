@@ -1,24 +1,33 @@
 {
-  "name": "apocryphon-monorepo",
+  "name": "skill-store",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Apocryphon \u2014 skill store and manager for coding agents (CLI + core engine)",
+  "description": "Skill Store — skill store and manager for coding agents (CLI + core engine)",
   "license": "MIT",
-  "engines": {
-    "node": ">=20"
-  },
-  "workspaces": [
-    "packages/*"
+  "author": "Hexalis",
+  "contributors": [
+    {
+      "name": "Marlon Baltodano"
+    }
   ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@12.21.0",
   "scripts": {
-    "build": "npm run build -w @apocryphon/core && npm run build -w @apocryphon/cli",
-    "typecheck": "npm run build -w @apocryphon/core --silent && npm run typecheck -w @apocryphon/core && npm run typecheck -w @apocryphon/cli",
-    "test": "npm run build -w @apocryphon/core --silent && node --import tsx --test packages/core/test/*.test.ts packages/cli/test/*.test.ts",
+    "build": "pnpm build:core && pnpm build:cli",
+    "build:core": "pnpm --filter @hexalis/skill-store-core build",
+    "build:cli": "pnpm --filter @hexalis/skill-store-cli build",
+    "typecheck": "pnpm build:core && pnpm --filter @hexalis/skill-store-core typecheck && pnpm --filter @hexalis/skill-store-cli typecheck",
+    "test": "pnpm build:core && node --import tsx --test packages/core/test/*.test.ts packages/cli/test/*.test.ts",
     "clean": "rm -rf packages/core/dist packages/cli/dist",
-    "prepublishOnly": "npm run build"
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/node": "^26.6.6",
     "tsup": "^9.0.0",
@@ -27,10 +36,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marlonbaltodano11/apocryphon.git"
+    "url": "git+https://github.com/hexalis/skill-store.git"
   },
-  "homepage": "https://github.com/marlonbaltodano11/apocryphon#readme",
+  "homepage": "https://github.com/hexalis/skill-store#readme",
   "bugs": {
-    "url": "https://github.com/marlonbaltodano11/apocryphon/issues"
+    "url": "https://github.com/hexalis/skill-store/issues"
   }
 }

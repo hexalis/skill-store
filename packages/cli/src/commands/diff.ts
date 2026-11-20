@@ -9,7 +9,7 @@ import {
   planSkillUpdate,
   registrySkillDir,
   summarizeDiff,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import { loadContext, tryLoadRegistry } from '../lib/context.js'
 import { addGlobalOptions, uiFromArgv } from '../lib/options.js'
 import { runSafely } from '../lib/run.js'
@@ -52,7 +52,7 @@ export function diffCommand(): Command {
       }
       if (!(await pathExists(pristineDir))) {
         throw new Error(
-          `Skill "${id}" has no pristine baseline. Run \`apocryphon adopt ${id}\` to set the current copy as the baseline.`,
+          `Skill "${id}" has no pristine baseline. Run \`skill-store adopt ${id}\` to set the current copy as the baseline.`,
         )
       }
 

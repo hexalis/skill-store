@@ -14,8 +14,8 @@ let sandbox: string
 let userHome: string
 let project: string
 
-function apocryphonHome(): string {
-  return path.join(userHome, '.apocryphon')
+function skillStoreHome(): string {
+  return path.join(userHome, '.skill-store')
 }
 
 interface RunResult {
@@ -31,7 +31,7 @@ function run(args: string[], options: { cwd?: string; stdin?: string } = {}): Ru
     env: {
       ...process.env,
       HOME: userHome,
-      APOCRYPHON_HOME: apocryphonHome(),
+      SKILL_STORE_HOME: skillStoreHome(),
       NO_COLOR: '1',
     },
     input: options.stdin,
@@ -66,7 +66,7 @@ async function isSymlink(target: string): Promise<boolean> {
 }
 
 before(async () => {
-  sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-cli-'))
+  sandbox = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-store-cli-'))
   userHome = path.join(sandbox, 'user')
   project = path.join(sandbox, 'project')
   await fs.mkdir(userHome, { recursive: true })
@@ -80,17 +80,17 @@ after(async () => {
   await fs.rm(sandbox, { recursive: true, force: true })
 })
 
-describe('apocryphon cli', () => {
+describe('skill-store cli', () => {
   it('initializes with a local registry', async () => {
     const result = run(['init', '--registry', catalogDir, '--clients', 'claude', '--yes'])
     assert.equal(result.status, 0, result.stderr)
-    assert.match(result.stdout, /Apocryphon initialized/)
+    assert.match(result.stdout, /Skill Store initialized/)
 
-    assert.equal(await exists(path.join(apocryphonHome(), 'config.json')), true)
-    assert.equal(await exists(path.join(apocryphonHome(), 'state.json')), true)
-    assert.equal(await exists(path.join(apocryphonHome(), 'vault')), true)
-    assert.equal(await exists(path.join(apocryphonHome(), 'pristine')), true)
-    assert.equal(await exists(path.join(apocryphonHome(), 'backups')), true)
+    assert.equal(await exists(path.join(skillStoreHome(), 'config.json')), true)
+    assert.equal(await exists(path.join(skillStoreHome(), 'state.json')), true)
+    assert.equal(await exists(path.join(skillStoreHome(), 'vault')), true)
+    assert.equal(await exists(path.join(skillStoreHome(), 'pristine')), true)
+    assert.equal(await exists(path.join(skillStoreHome(), 'backups')), true)
   })
 
   it('searches the catalog with fuzzy ranking', () => {
@@ -106,11 +106,11 @@ describe('apocryphon cli', () => {
 
     for (const id of ['fixture-planning', 'fixture-review']) {
       assert.equal(
-        await exists(path.join(apocryphonHome(), 'vault', id, 'SKILL.md')),
+        await exists(path.join(skillStoreHome(), 'vault', id, 'SKILL.md')),
         true,
       )
       assert.equal(
-        await exists(path.join(apocryphonHome(), 'pristine', id, 'SKILL.md')),
+        await exists(path.join(skillStoreHome(), 'pristine', id, 'SKILL.md')),
         true,
       )
     }
@@ -227,7 +227,7 @@ describe('apocryphon cli', () => {
 
     assert.equal(await exists(path.join(project, '.claude', 'skills', 'fixture-review')), false)
     assert.equal(
-      await exists(path.join(apocryphonHome(), 'vault', 'fixture-review', 'SKILL.md')),
+      await exists(path.join(skillStoreHome(), 'vault', 'fixture-review', 'SKILL.md')),
       true,
     )
 
@@ -235,10 +235,18 @@ describe('apocryphon cli', () => {
     assert.equal(exclude.includes('.claude/skills/fixture-review'), false)
   })
 
+  it('exposes the skill-store and hss binaries', async () => {
+    const pkg = JSON.parse(
+      await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'),
+    ) as { bin?: Record<string, string> }
+    assert.equal(pkg.bin?.['skill-store'], 'dist/cli.mjs')
+    assert.equal(pkg.bin?.hss, 'dist/cli.mjs')
+  })
+
   it('prints shell completions and completion candidates', () => {
     const script = run(['completion', 'bash'])
     assert.equal(script.status, 0, script.stderr)
-    assert.match(script.stdout, /complete -F _apocryphon_complete apocryphon/)
+    assert.match(script.stdout, /complete -F _skill_store_complete skill-store hss/)
 
     const commands = run(['__complete', 'words', 'en'])
     assert.equal(commands.status, 0)

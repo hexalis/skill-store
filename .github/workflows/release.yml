@@ -1,195 +1,26 @@
 name: Release
 
-# Stable release to npm.
-#
-# Triggers:
-#   - Pushing a tag like v0.1.0 (the tag must match @apocryphon/cli's version).
-#   - Manual dispatch (optionally with a dry run).
-#
-# Requires a GitHub Environment named "production" with:
-#   - Variable NPM_PUBLISH=true (publishing switch, mirroring the Hexalis pattern)
-#   - Secret   NPM_TOKEN    (npm automation token with publish access to @apocryphon)
-#
-# Provenance requires a public repository and the id-token permission below.
-
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      dist-tag:
-        description: "npm dist-tag (latest, next, beta...)"
-        required: false
-        default: "latest"
-      provenance:
-        description: "Publish with npm provenance (requires a public repo)"
-        type: boolean
-        default: true
-      dry-run:
-        description: "Build and pack without publishing"
-        type: boolean
-        default: false
 
 permissions:
   contents: write
-  id-token: write
+  pull-requests: write
 
 concurrency:
-  group: release-npm
+  group: release
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish to npm
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment: production
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      DIST_TAG: ${{ inputs.dist-tag || 'latest' }}
-    steps:
-      - name: Publishing gate
-        id: gate
-        env:
-          NPM_PUBLISH: ${{ vars.NPM_PUBLISH }}
-          HAS_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
-          DRY_RUN: ${{ inputs.dry-run }}
-        run: |
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "open=true" >> "$GITHUB_OUTPUT"
-            echo "mode=dry-run" >> "$GITHUB_OUTPUT"
-            echo "Dry run requested: build and pack only."
-          elif [ "$NPM_PUBLISH" = "true" ] && [ "$HAS_TOKEN" = "true" ]; then
-            echo "open=true" >> "$GITHUB_OUTPUT"
-            echo "mode=publish" >> "$GITHUB_OUTPUT"
-            echo "Publishing enabled."
-          else
-            echo "open=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Publishing is off for environment 'npm' (NPM_PUBLISH=$NPM_PUBLISH, token present: $HAS_TOKEN)."
-          fi
-
-      - if: steps.gate.outputs.open == 'true'
-        uses: actions/checkout@v4
-
-      - if: steps.gate.outputs.open == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          registry-url: https://registry.npmjs.org
-
-      - if: steps.gate.outputs.open == 'true'
-        name: Install
-        run: npm ci
-
-      - if: steps.gate.outputs.open == 'true'
-        name: Typecheck
-        run: npm run typecheck
-
-      - if: steps.gate.outputs.open == 'true'
-        name: Test
-        run: npm test
-
-      - if: steps.gate.outputs.open == 'true'
-        name: Build
-        run: npm run build
-
-      - if: steps.gate.outputs.open == 'true'
-        name: Verify versions
-        id: versions
-        run: |
-          set -euo pipefail
-          CORE=$(node -p "require('./packages/core/package.json').version")
-          CLI=$(node -p "require('./packages/cli/package.json').version")
-          echo "core=$CORE" >> "$GITHUB_OUTPUT"
-          echo "cli=$CLI" >> "$GITHUB_OUTPUT"
-          echo "Core: $CORE | CLI: $CLI"
-
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            TAG="${GITHUB_REF_NAME#v}"
-            if [ "$TAG" != "$CLI" ]; then
-              echo "::error::Tag $GITHUB_REF_NAME does not match @apocryphon/cli version $CLI."
-              exit 1
-            fi
-          fi
-
-          if [ "$CORE" != "$CLI" ]; then
-            echo "::warning::Core ($CORE) and CLI ($CLI) versions differ; make sure that is intentional."
-          fi
-
-      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish'
-        name: Publish packages
-        run: |
-          set -euo pipefail
-          ARGS=(--access public --tag "$DIST_TAG")
-          if [ "${{ inputs.provenance }}" != "false" ]; then
-            ARGS+=(--provenance)
-          fi
-
-          publish_workspace() {
-            local workspace="$1"
-            local name="$2"
-            local version="$3"
-
-            if npm view "${name}@${version}" version >/dev/null 2>&1; then
-              echo "::notice::${name}@${version} is already published; skipping."
-              return 0
-            fi
-
-            echo "Publishing ${name}@${version} (dist-tag: ${DIST_TAG})"
-            npm publish -w "$workspace" "${ARGS[@]}"
-          }
-
-          publish_workspace "@apocryphon/core" "@apocryphon/core" "${{ steps.versions.outputs.core }}"
-          publish_workspace "@apocryphon/cli" "@apocryphon/cli" "${{ steps.versions.outputs.cli }}"
-
-      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish'
-        name: Pack release assets
-        run: |
-          mkdir -p release-assets
-          npm pack -w @apocryphon/core --pack-destination release-assets
-          npm pack -w @apocryphon/cli --pack-destination release-assets
-
-      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish' && github.ref_type == 'tag'
-        name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "::notice::GitHub Release $GITHUB_REF_NAME already exists."
-          else
-            gh release create "$GITHUB_REF_NAME" release-assets/*.tgz \
-              --title "Apocryphon $GITHUB_REF_NAME" \
-              --generate-notes \
-              --verify-tag \
-              --latest
-          fi
-
-      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'dry-run'
-        name: Pack (dry run)
-        run: |
-          mkdir -p artifacts
-          npm pack -w @apocryphon/core --pack-destination artifacts
-          npm pack -w @apocryphon/cli --pack-destination artifacts
-          ls -la artifacts
-
-      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'dry-run'
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-tarballs
-          path: artifacts/*.tgz
-          retention-days: 7
-
-      - if: steps.gate.outputs.open == 'true' && steps.gate.outputs.mode == 'publish'
-        name: Summary
-        run: |
-          {
-            echo "## npm release"
-            echo ""
-            echo "| Package | Version | Dist tag |"
-            echo "| --- | --- | --- |"
-            echo "| @apocryphon/core | ${{ steps.versions.outputs.core }} | ${DIST_TAG} |"
-            echo "| @apocryphon/cli | ${{ steps.versions.outputs.cli }} | ${DIST_TAG} |"
-          } >> "$GITHUB_STEP_SUMMARY"
+  release:
+    name: Changesets release
+    uses: hexalis/github-workflows/.github/workflows/changesets-release.yml@main
+    with:
+      environment: stable
+      version-command: pnpm version-packages
+      publish-command: pnpm release
+      npm-scope: hexalis
+    secrets:
+      npm-token: ${{ secrets.NPM_TOKEN }}

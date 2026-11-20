@@ -9,7 +9,7 @@ import {
   registrySkillDir,
   searchRegistry,
   type SkillUpdatePlan,
-} from '@apocryphon/core'
+} from '@hexalis/skill-store-core'
 import {
   loadContext,
   requireRegistry,
@@ -222,7 +222,7 @@ export async function runInstall(
     }
     if (applied.conflicts.length > 0) {
       ui.warn(
-        `Conflicts in ${id}: ${applied.conflicts.join(', ')}. Edit the files (markers preserved) and run \`apocryphon sync\`.`,
+        `Conflicts in ${id}: ${applied.conflicts.join(', ')}. Edit the files (markers preserved) and run \`skill-store sync\`.`,
       )
     }
 
@@ -251,7 +251,7 @@ export async function runInstall(
       return `  ${id}: did you mean ${matches.map((match) => `"${match.id}"`).join(', ')}?`
     })
     throw new Error(
-      `Skill(s) not found in the registry:\n${suggestions.join('\n')}\nRun \`apocryphon search <query>\` to explore the catalog.`,
+      `Skill(s) not found in the registry:\n${suggestions.join('\n')}\nRun \`skill-store search <query>\` to explore the catalog.`,
     )
   }
 

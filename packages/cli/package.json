@@ -1,14 +1,21 @@
 {
-  "name": "@apocryphon/cli",
-  "version": "0.2.0",
-  "description": "Apocryphon CLI \u2014 install, validate and activate agent skills globally and per project.",
+  "name": "@hexalis/skill-store-cli",
+  "version": "0.0.0",
+  "description": "Skill Store CLI — install, validate and activate agent skills globally and per project.",
   "type": "module",
   "license": "MIT",
+  "author": "Hexalis",
+  "contributors": [
+    {
+      "name": "Marlon Baltodano"
+    }
+  ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "bin": {
-    "apocryphon": "dist/cli.mjs"
+    "skill-store": "dist/cli.mjs",
+    "hss": "dist/cli.mjs"
   },
   "files": [
     "dist",
@@ -19,7 +26,8 @@
     "access": "public"
   },
   "keywords": [
-    "apocryphon",
+    "hexalis",
+    "skill-store",
     "agent-skills",
     "claude-code",
     "cursor",
@@ -31,7 +39,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@apocryphon/core": "^0.2.0",
+    "@hexalis/skill-store-core": "workspace:^",
     "@clack/prompts": "^1.9.0",
     "commander": "^14.0.3",
     "picocolors": "^1.1.1",
@@ -50,11 +58,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marlonbaltodano11/apocryphon.git",
+    "url": "git+https://github.com/hexalis/skill-store.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/marlonbaltodano11/apocryphon/tree/main/packages/cli#readme",
+  "homepage": "https://github.com/hexalis/skill-store/tree/main/packages/cli#readme",
   "bugs": {
-    "url": "https://github.com/marlonbaltodano11/apocryphon/issues"
+    "url": "https://github.com/hexalis/skill-store/issues"
   }
 }

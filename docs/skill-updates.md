@@ -1,12 +1,12 @@
 # Skill updates and customization
 
-Apocryphon never silently overwrites a skill you edited. This document describes
+Skill Store never silently overwrites a skill you edited. This document describes
 how local changes are detected, shown and merged.
 
 ## Directory layout
 
 ```text
-~/.apocryphon/
+~/.skill-store/
 ├── vault/<id>/                 # working copy used by clients (symlinked)
 ├── pristine/<id>/              # exact copy of the installed registry version
 └── backups/<id>/<timestamp>/   # snapshot taken before an overwrite or merge
@@ -17,7 +17,7 @@ how local changes are detected, shown and merged.
 ```jsonc
 {
   "version": "1.0.0",
-  "source": { "type": "registry", "ref": "git@github.com:marlonbaltodano11/apocryphon-registry.git" },
+  "source": { "type": "registry", "ref": "git@github.com:hexalis/skill-registry.git" },
   "contentHash": "sha256 of the whole skill",
   "fileHashes": { "SKILL.md": "…", "scripts/check.sh": "…" },
   "fileModes": { "scripts/check.sh": "755" },
@@ -36,8 +36,8 @@ how local changes are detected, shown and merged.
 | `update available` | The registry changed since the installed version. |
 | `conflict` | Both the vault and the registry changed. |
 
-`apocryphon status` and `apocryphon list` show these states.
-`apocryphon diff <id>` shows local and upstream changes.
+`skill-store status` and `skill-store list` show these states.
+`skill-store diff <id>` shows local and upstream changes.
 
 ## Update policy
 
@@ -74,22 +74,22 @@ how local changes are detected, shown and merged.
   >>>>>>> theirs
   ```
 
-  Resolve them in the editor and run `apocryphon sync` again; the result becomes
+  Resolve them in the editor and run `skill-store sync` again; the result becomes
   local customization.
 
 ## Backups and recovery
 
 - Every overwrite or merge snapshots the vault into
-  `~/.apocryphon/backups/<id>/<timestamp>/`.
+  `~/.skill-store/backups/<id>/<timestamp>/`.
 - The last **5** backups per skill are kept.
-- `apocryphon reset <id>` restores the pristine copy (discarding local edits),
+- `skill-store reset <id>` restores the pristine copy (discarding local edits),
   after confirmation.
 
 ## Existing installations
 
 Installs created before this feature have no `pristine/` copy:
 
-- On first sync, Apocryphon adopts the current vault as the baseline only if its
+- On first sync, Skill Store adopts the current vault as the baseline only if its
   hash matches the one recorded at install time.
 - Otherwise the skill is marked `baseline: unknown` and the first update requires
-  `--force`, `--keep` or `apocryphon adopt <id>`.
+  `--force`, `--keep` or `skill-store adopt <id>`.

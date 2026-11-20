@@ -11,7 +11,7 @@ import { emptyProjects } from '../src/store.js'
 const tempDirs: string[] = []
 
 async function makeTempDir(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'apocryphon-status-'))
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'skill-store-status-'))
   tempDirs.push(dir)
   return dir
 }
