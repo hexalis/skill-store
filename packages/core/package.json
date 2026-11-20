@@ -1,6 +1,6 @@
 {
   "name": "@hexalis/skill-store-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Core engine for Skill Store: skill vault, linter, sync engine and registry client.",
   "type": "module",
   "license": "MIT",
