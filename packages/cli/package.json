@@ -1,6 +1,6 @@
 {
   "name": "@hexalis/skill-store-cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Skill Store CLI — install, validate and activate agent skills globally and per project.",
   "type": "module",
   "license": "MIT",
